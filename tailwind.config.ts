@@ -64,8 +64,8 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				news: {
-					primary: '#0073b6', // Deep blue for headers
-					secondary: '#e63946', // Red for accents/highlights
+					primary: '#bc2721', // Changed to match red from screenshot
+					secondary: '#324da0', // Changed to match blue from screenshot
 					light: '#f8f9fa', // Light background
 					dark: '#212529', // Dark text
 					gray: '#6c757d', // Gray for secondary text
