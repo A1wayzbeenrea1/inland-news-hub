@@ -37,6 +37,7 @@ const AdminLogin = () => {
 
   // Handle form submission
   const onSubmit = (values: z.infer<typeof formSchema>) => {
+    console.log("Login attempt with:", values);
     setIsLoading(true);
     
     // For demo purposes, hardcoded credentials
@@ -51,7 +52,9 @@ const AdminLogin = () => {
       });
       
       // Redirect to admin dashboard
-      navigate("/admin/dashboard");
+      setTimeout(() => {
+        navigate("/admin/dashboard");
+      }, 500);
     } else {
       toast({
         title: "Authentication failed",
@@ -126,7 +129,10 @@ const AdminLogin = () => {
           </Form>
         </CardContent>
         <CardFooter className="flex justify-center text-sm text-muted-foreground">
-          Protected area for authorized administrators only
+          <div>
+            <p>Protected area for authorized administrators only</p>
+            <p className="mt-2 text-center">Use username: <strong>admin</strong> and password: <strong>admin123</strong></p>
+          </div>
         </CardFooter>
       </Card>
     </div>
