@@ -16,23 +16,23 @@ interface StaffMember {
 const staffMembers: StaffMember[] = [
   {
     id: 1,
-    name: "Sarah Johnson",
+    name: "Jessica Martinez",
     role: "Editor in Chief",
-    bio: "Sarah has been in journalism for over 15 years, previously working at the Los Angeles Times and San Bernardino Sun. She leads our editorial vision with a focus on impactful local reporting.",
+    bio: "Jessica has been in journalism for over 15 years, previously working at the Los Angeles Times and San Bernardino Sun. She leads our editorial vision with a focus on impactful local reporting.",
     image: "/placeholder.svg"
   },
   {
     id: 2,
-    name: "Michael Chen",
+    name: "Robert Kim",
     role: "Senior Reporter",
-    bio: "Michael covers politics and public safety across the Inland Empire. His investigative reporting has won numerous state journalism awards.",
+    bio: "Robert covers politics and public safety across the Inland Empire. His investigative reporting has won numerous state journalism awards.",
     image: "/placeholder.svg"
   },
   {
     id: 3,
-    name: "Gabriela Rodriguez",
+    name: "Elena Santos",
     role: "Community News Editor",
-    bio: "Gabriela focuses on community events, education, and local business news. She has been with IE News Hub since its founding.",
+    bio: "Elena focuses on community events, education, and local business news. She has been with IE News Hub since its founding.",
     image: "/placeholder.svg"
   },
   {
