@@ -9,7 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { Shield } from "lucide-react";
+import { Shield, HelpCircle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Define the form schema with validation
 const formSchema = z.object({
@@ -89,7 +90,7 @@ const AdminLogin = () => {
                     <FormLabel>Username</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="admin" 
+                        placeholder="Enter username" 
                         disabled={isLoading} 
                         {...field} 
                       />
@@ -108,7 +109,7 @@ const AdminLogin = () => {
                     <FormControl>
                       <Input 
                         type="password" 
-                        placeholder="••••••" 
+                        placeholder="Enter password" 
                         disabled={isLoading} 
                         {...field} 
                       />
@@ -129,9 +130,20 @@ const AdminLogin = () => {
           </Form>
         </CardContent>
         <CardFooter className="flex justify-center text-sm text-muted-foreground">
-          <div>
+          <div className="flex items-center">
             <p>Protected area for authorized administrators only</p>
-            <p className="mt-2 text-center">Use username: <strong>admin</strong> and password: <strong>admin123</strong></p>
+            <Tooltip delayDuration={300}>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="ml-1 h-5 w-5">
+                  <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                  <span className="sr-only">Admin credentials info</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p>Username: admin</p>
+                <p>Password: admin123</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
         </CardFooter>
       </Card>
