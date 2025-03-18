@@ -7,6 +7,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import CategoryPage from "./pages/CategoryPage";
+import HealthCategoryPage from "./pages/HealthCategoryPage";
+import EnvironmentCategoryPage from "./pages/EnvironmentCategoryPage";
 import CommunityPage from "./pages/CommunityPage";
 import SendUsTips from "./pages/SendUsTips";
 import ArticleSelectionPage from "./pages/ArticleSelectionPage";
@@ -37,7 +39,11 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          
+          {/* Category Routes */}
           <Route path="/category/:category" element={<CategoryPage />} />
+          <Route path="/category/health" element={<HealthCategoryPage />} />
+          <Route path="/category/environment" element={<EnvironmentCategoryPage />} />
           
           {/* Community routes - support both singular and plural paths */}
           <Route path="/community/:community" element={<CommunityPage />} />

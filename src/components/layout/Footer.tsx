@@ -1,3 +1,4 @@
+
 import { Link } from 'react-router-dom';
 import { Facebook, Twitter, Instagram, Mail, Phone, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -73,6 +74,8 @@ export const Footer = () => {
               <li><Link to="/news/local" className="hover:text-white">Local News</Link></li>
               <li><Link to="/news/regional" className="hover:text-white">Regional News</Link></li>
               <li><Link to="/news/breaking" className="hover:text-white">Breaking News</Link></li>
+              <li><Link to="/category/health" className="hover:text-white">Health</Link></li>
+              <li><Link to="/category/environment" className="hover:text-white">Environment</Link></li>
             </ul>
           </div>
           <div>
@@ -82,15 +85,19 @@ export const Footer = () => {
               <li><Link to="/communities/redlands" className="hover:text-white">Redlands</Link></li>
               <li><Link to="/communities/rialto" className="hover:text-white">Rialto</Link></li>
               <li><Link to="/communities/ontario" className="hover:text-white">Ontario</Link></li>
+              <li><Link to="/communities/san-bernardino" className="hover:text-white">San Bernardino</Link></li>
+              <li><Link to="/communities/riverside" className="hover:text-white">Riverside</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="text-sm font-bold uppercase tracking-wider mb-4">Topics</h4>
             <ul className="space-y-2 text-sm text-gray-300">
-              <li><Link to="/public-safety" className="hover:text-white">Public Safety</Link></li>
-              <li><Link to="/education" className="hover:text-white">Education</Link></li>
-              <li><Link to="/politics" className="hover:text-white">Politics</Link></li>
-              <li><Link to="/business" className="hover:text-white">Business</Link></li>
+              <li><Link to="/category/public-safety" className="hover:text-white">Public Safety</Link></li>
+              <li><Link to="/category/education" className="hover:text-white">Education</Link></li>
+              <li><Link to="/category/politics" className="hover:text-white">Politics</Link></li>
+              <li><Link to="/category/business" className="hover:text-white">Business</Link></li>
+              <li><Link to="/category/health" className="hover:text-white">Health</Link></li>
+              <li><Link to="/category/environment" className="hover:text-white">Environment</Link></li>
             </ul>
           </div>
           <div>

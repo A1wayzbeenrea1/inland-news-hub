@@ -21,6 +21,14 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -301,13 +309,47 @@ const NavLinks = ({ mobile = false, onClick = () => {} }: { mobile?: boolean; on
   return (
     <>
       <Link to="/" className={linkClasses} onClick={onClick}>Home</Link>
-      <Link to="/news" className={linkClasses} onClick={onClick}>News</Link>
-      <Link to="/public-safety" className={linkClasses} onClick={onClick}>Public Safety</Link>
-      <Link to="/politics" className={linkClasses} onClick={onClick}>Politics</Link>
-      <Link to="/business" className={linkClasses} onClick={onClick}>Business</Link>
-      <Link to="/education" className={linkClasses} onClick={onClick}>Education</Link>
-      <Link to="/communities" className={linkClasses} onClick={onClick}>Communities</Link>
-      <Link to="/sports" className={linkClasses} onClick={onClick}>Sports</Link>
+      
+      <NavigationMenu>
+        <NavigationMenuList>
+          <NavigationMenuItem>
+            <NavigationMenuTrigger className={cn(linkClasses, "bg-transparent p-0 h-auto")}>Categories</NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <div className="grid grid-cols-2 gap-3 p-4 w-[400px]">
+                <Link to="/news" className="block p-2 hover:bg-gray-100 rounded">News</Link>
+                <Link to="/category/public-safety" className="block p-2 hover:bg-gray-100 rounded">Public Safety</Link>
+                <Link to="/category/politics" className="block p-2 hover:bg-gray-100 rounded">Politics</Link>
+                <Link to="/category/business" className="block p-2 hover:bg-gray-100 rounded">Business</Link>
+                <Link to="/category/education" className="block p-2 hover:bg-gray-100 rounded">Education</Link>
+                <Link to="/category/health" className="block p-2 hover:bg-gray-100 rounded">Health</Link>
+                <Link to="/category/environment" className="block p-2 hover:bg-gray-100 rounded">Environment</Link>
+                <Link to="/category/sports" className="block p-2 hover:bg-gray-100 rounded">Sports</Link>
+              </div>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+        </NavigationMenuList>
+      </NavigationMenu>
+      
+      <NavigationMenu>
+        <NavigationMenuList>
+          <NavigationMenuItem>
+            <NavigationMenuTrigger className={cn(linkClasses, "bg-transparent p-0 h-auto")}>Communities</NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <div className="grid grid-cols-2 gap-3 p-4 w-[400px]">
+                <Link to="/communities/yucaipa" className="block p-2 hover:bg-gray-100 rounded">Yucaipa</Link>
+                <Link to="/communities/redlands" className="block p-2 hover:bg-gray-100 rounded">Redlands</Link>
+                <Link to="/communities/rialto" className="block p-2 hover:bg-gray-100 rounded">Rialto</Link>
+                <Link to="/communities/ontario" className="block p-2 hover:bg-gray-100 rounded">Ontario</Link>
+                <Link to="/communities/san-bernardino" className="block p-2 hover:bg-gray-100 rounded">San Bernardino</Link>
+                <Link to="/communities/riverside" className="block p-2 hover:bg-gray-100 rounded">Riverside</Link>
+              </div>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+        </NavigationMenuList>
+      </NavigationMenu>
+      
+      <Link to="/about" className={linkClasses} onClick={onClick}>About</Link>
+      <Link to="/staff" className={linkClasses} onClick={onClick}>Staff</Link>
       <Link to="/send-us-tips" className={cn(linkClasses, "flex items-center gap-1 text-news-secondary font-semibold")} onClick={onClick}>
         <Send size={16} />
         Send Us Tips
