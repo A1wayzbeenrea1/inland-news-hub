@@ -1,6 +1,7 @@
+
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Menu, X, Bell, Facebook, Twitter, Instagram } from 'lucide-react';
+import { Search, Menu, X, Bell, Facebook, Twitter, Instagram, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -140,6 +141,10 @@ const NavLinks = ({ mobile = false, onClick = () => {} }: { mobile?: boolean; on
       <Link to="/education" className={linkClasses} onClick={onClick}>Education</Link>
       <Link to="/communities" className={linkClasses} onClick={onClick}>Communities</Link>
       <Link to="/sports" className={linkClasses} onClick={onClick}>Sports</Link>
+      <Link to="/send-us-tips" className={cn(linkClasses, "flex items-center gap-1 text-news-secondary font-semibold")} onClick={onClick}>
+        <Send size={16} />
+        Send Us Tips
+      </Link>
     </>
   );
 };

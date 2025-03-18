@@ -8,6 +8,8 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import CategoryPage from "./pages/CategoryPage";
 import CommunityPage from "./pages/CommunityPage";
+import SendUsTips from "./pages/SendUsTips";
+import ArticleSelectionPage from "./pages/ArticleSelectionPage";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +26,12 @@ const App = () => (
           {/* Community routes - support both singular and plural paths */}
           <Route path="/community/:community" element={<CommunityPage />} />
           <Route path="/communities/:community" element={<CommunityPage />} />
+          
+          {/* Send Us Tips page */}
+          <Route path="/send-us-tips" element={<SendUsTips />} />
+          
+          {/* Article Selection page */}
+          <Route path="/article-selection" element={<ArticleSelectionPage />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
