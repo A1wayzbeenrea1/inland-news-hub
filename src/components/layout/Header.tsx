@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Menu, X, Bell, Facebook, Twitter, Instagram } from 'lucide-react';
@@ -139,7 +138,7 @@ const NavLinks = ({ mobile = false, onClick = () => {} }: { mobile?: boolean; on
       <Link to="/politics" className={linkClasses} onClick={onClick}>Politics</Link>
       <Link to="/business" className={linkClasses} onClick={onClick}>Business</Link>
       <Link to="/education" className={linkClasses} onClick={onClick}>Education</Link>
-      <Link to="/community" className={linkClasses} onClick={onClick}>Communities</Link>
+      <Link to="/communities" className={linkClasses} onClick={onClick}>Communities</Link>
       <Link to="/sports" className={linkClasses} onClick={onClick}>Sports</Link>
     </>
   );

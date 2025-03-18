@@ -25,7 +25,7 @@ export const CommunityNavigation = ({ className }: CommunityNavigationProps) => 
       {communities.map((community) => (
         <Link 
           key={community.slug}
-          to={`/community/${community.slug}`}
+          to={`/communities/${community.slug}`}
           className="text-sm text-gray-700 hover:text-news-primary py-1 px-2 rounded-md hover:bg-gray-100 transition-colors"
         >
           {community.name}
