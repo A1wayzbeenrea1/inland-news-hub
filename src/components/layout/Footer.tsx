@@ -1,6 +1,6 @@
 
 import { Link } from 'react-router-dom';
-import { Facebook, Twitter, Instagram, Mail, Phone } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Mail, Phone, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -102,6 +102,9 @@ export const Footer = () => {
               <li><Link to="/staff" className="hover:text-white">Staff</Link></li>
               <li><Link to="/advertise" className="hover:text-white">Advertise</Link></li>
               <li><Link to="/contact" className="hover:text-white">Contact</Link></li>
+              <li><Link to="/admin/login" className="hover:text-white flex items-center gap-1">
+                <Shield size={16} /> Admin
+              </Link></li>
             </ul>
           </div>
         </div>
