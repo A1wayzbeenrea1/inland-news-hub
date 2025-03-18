@@ -1,67 +1,71 @@
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail } from 'lucide-react';
 import { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Mail } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
-export const NewsletterSignup = () => {
-  const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
+interface NewsletterSignupProps {
+  title?: string;
+  description?: string;
+  className?: string;
+}
+
+export const NewsletterSignup = ({ 
+  title = "Subscribe to Our Newsletter", 
+  description = "Get the latest news delivered directly to your inbox.", 
+  className 
+}: NewsletterSignupProps) => {
   const { toast } = useToast();
+  const [email, setEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setIsSubmitting(true);
     
     // Simulate API call
     setTimeout(() => {
-      setLoading(false);
-      setEmail('');
       toast({
         title: "Subscription successful!",
         description: "Thank you for subscribing to our newsletter.",
-        duration: 3000,
       });
+      setEmail('');
+      setIsSubmitting(false);
     }, 1000);
   };
 
   return (
-    <Card className="border-news-primary border-t-4">
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center text-xl">
-          <Mail className="mr-2 h-5 w-5 text-news-primary" /> 
-          Subscribe to Our Newsletter
-        </CardTitle>
-        <CardDescription>
-          Get the latest news from the Inland Empire delivered to your inbox daily.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit}>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Input
-              type="email"
-              placeholder="Your email address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="flex-grow"
-            />
-            <Button 
-              type="submit" 
-              className="bg-news-primary hover:bg-news-secondary sm:w-auto w-full"
-              disabled={loading}
-            >
-              {loading ? "Subscribing..." : "Subscribe"}
-            </Button>
-          </div>
+    <Card className={className}>
+      <CardContent className="p-4">
+        <div className="flex items-center gap-2 mb-4">
+          <Mail className="h-5 w-5 text-news-primary" />
+          <h3 className="text-lg font-semibold">{title}</h3>
+        </div>
+        
+        <p className="text-sm text-gray-600 mb-4">
+          {description}
+        </p>
+        
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <Input
+            type="email"
+            placeholder="Your email address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full"
+          />
+          <Button 
+            type="submit" 
+            className="w-full bg-news-primary hover:bg-news-primary/90"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Subscribing..." : "Subscribe"}
+          </Button>
         </form>
       </CardContent>
-      <CardFooter className="pt-0 text-xs text-gray-500">
-        We respect your privacy. Unsubscribe at any time.
-      </CardFooter>
     </Card>
   );
 };
