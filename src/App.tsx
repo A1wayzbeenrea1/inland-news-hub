@@ -10,8 +10,21 @@ import CategoryPage from "./pages/CategoryPage";
 import CommunityPage from "./pages/CommunityPage";
 import SendUsTips from "./pages/SendUsTips";
 import ArticleSelectionPage from "./pages/ArticleSelectionPage";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const queryClient = new QueryClient();
+
+// Simple auth guard component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const isAuthenticated = localStorage.getItem("adminAuthenticated") === "true";
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/admin/login" replace />;
+  }
+  
+  return <>{children}</>;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -32,6 +45,14 @@ const App = () => (
           
           {/* Article Selection page */}
           <Route path="/article-selection" element={<ArticleSelectionPage />} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/dashboard" element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          } />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
