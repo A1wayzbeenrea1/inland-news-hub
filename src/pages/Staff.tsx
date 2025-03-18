@@ -19,35 +19,35 @@ const staffMembers: StaffMember[] = [
     name: "Jessica Martinez",
     role: "Editor in Chief",
     bio: "Jessica has been in journalism for over 15 years, previously working at the Los Angeles Times and San Bernardino Sun. She leads our editorial vision with a focus on impactful local reporting.",
-    image: "/placeholder.svg"
+    image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&h=400&q=80"
   },
   {
     id: 2,
     name: "Robert Kim",
     role: "Senior Reporter",
     bio: "Robert covers politics and public safety across the Inland Empire. His investigative reporting has won numerous state journalism awards.",
-    image: "/placeholder.svg"
+    image: "https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&h=400&q=80"
   },
   {
     id: 3,
     name: "Elena Santos",
     role: "Community News Editor",
     bio: "Elena focuses on community events, education, and local business news. She has been with IE News Hub since its founding.",
-    image: "/placeholder.svg"
+    image: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&h=400&q=80"
   },
   {
     id: 4,
     name: "David Wilson",
     role: "Sports Reporter",
     bio: "David covers local high school and college sports throughout San Bernardino and Riverside counties.",
-    image: "/placeholder.svg"
+    image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&h=400&q=80"
   },
   {
     id: 5,
     name: "Aisha Patel",
     role: "Digital Media Manager",
     bio: "Aisha manages our website, social media presence, and digital storytelling initiatives. She brings experience from both journalism and web development.",
-    image: "/placeholder.svg"
+    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&h=400&q=80"
   }
 ];
 
