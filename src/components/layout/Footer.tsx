@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 import { Facebook, Twitter, Instagram, Mail, Phone, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -74,7 +73,6 @@ export const Footer = () => {
               <li><Link to="/news/local" className="hover:text-white">Local News</Link></li>
               <li><Link to="/news/regional" className="hover:text-white">Regional News</Link></li>
               <li><Link to="/news/breaking" className="hover:text-white">Breaking News</Link></li>
-              <li><Link to="/news/coronavirus" className="hover:text-white">Coronavirus</Link></li>
             </ul>
           </div>
           <div>
