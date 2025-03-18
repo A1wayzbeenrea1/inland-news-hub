@@ -1,3 +1,4 @@
+
 import { Link } from 'react-router-dom';
 import { Facebook, Twitter, Instagram, Mail, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -38,7 +39,7 @@ export const Footer = () => {
             <div className="space-y-2">
               <div className="flex items-center space-x-2">
                 <Phone size={18} />
-                <span>(909) 555-NEWS</span>
+                <span>(909) 300-7596</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Mail size={18} />
