@@ -13,6 +13,7 @@ import ArticleSelectionPage from "./pages/ArticleSelectionPage";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import About from "./pages/About";
+import Staff from "./pages/Staff";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,9 @@ const App = () => (
           
           {/* About page */}
           <Route path="/about" element={<About />} />
+          
+          {/* Staff page */}
+          <Route path="/staff" element={<Staff />} />
           
           {/* Send Us Tips page */}
           <Route path="/send-us-tips" element={<SendUsTips />} />
