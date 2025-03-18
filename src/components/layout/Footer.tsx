@@ -1,6 +1,5 @@
-
 import { Link } from 'react-router-dom';
-import { Facebook, Twitter, Instagram, Mail, Phone, MapPin } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Mail, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -37,17 +36,13 @@ export const Footer = () => {
           <div>
             <h3 className="text-lg font-bold mb-4">Contact Us</h3>
             <div className="space-y-2">
-              <div className="flex items-start space-x-2">
-                <MapPin size={18} className="mt-1 flex-shrink-0" />
-                <span>123 Main Street, Redlands, CA 92373</span>
-              </div>
               <div className="flex items-center space-x-2">
                 <Phone size={18} />
                 <span>(909) 555-NEWS</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Mail size={18} />
-                <span>news@inlandnewshub.com</span>
+                <span>ie.truenews@gmail.com</span>
               </div>
             </div>
           </div>
