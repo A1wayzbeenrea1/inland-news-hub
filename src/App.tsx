@@ -14,6 +14,7 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import About from "./pages/About";
 import Staff from "./pages/Staff";
+import Accessibility from "./pages/Accessibility";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +54,9 @@ const App = () => (
           
           {/* Article Selection page */}
           <Route path="/article-selection" element={<ArticleSelectionPage />} />
+          
+          {/* Accessibility page */}
+          <Route path="/accessibility" element={<Accessibility />} />
           
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />
