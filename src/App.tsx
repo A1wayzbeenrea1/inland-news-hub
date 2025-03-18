@@ -12,6 +12,7 @@ import SendUsTips from "./pages/SendUsTips";
 import ArticleSelectionPage from "./pages/ArticleSelectionPage";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import About from "./pages/About";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,9 @@ const App = () => (
           {/* Community routes - support both singular and plural paths */}
           <Route path="/community/:community" element={<CommunityPage />} />
           <Route path="/communities/:community" element={<CommunityPage />} />
+          
+          {/* About page */}
+          <Route path="/about" element={<About />} />
           
           {/* Send Us Tips page */}
           <Route path="/send-us-tips" element={<SendUsTips />} />
