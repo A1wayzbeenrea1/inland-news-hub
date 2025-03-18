@@ -1,9 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
-import { Layout } from '@/components/layout/Layout';
+import { Layout } from '../components/layout/Layout';
 import { Slider } from '@/components/ui/slider';
 import { 
-  Typography, 
   Eye, 
   Text, 
   PanelTop, 
@@ -68,11 +66,9 @@ const Accessibility = () => {
   });
 
   useEffect(() => {
-    // Apply text size
     document.documentElement.style.setProperty('--text-size-factor', `${textSize / 100}`);
     localStorage.setItem('accessibility_textSize', textSize.toString());
 
-    // Apply high contrast
     if (highContrast) {
       document.body.classList.add('high-contrast');
     } else {
@@ -80,7 +76,6 @@ const Accessibility = () => {
     }
     localStorage.setItem('accessibility_highContrast', highContrast.toString());
 
-    // Apply reduce motion
     if (reduceMotion) {
       document.body.classList.add('reduce-motion');
     } else {
@@ -88,29 +83,24 @@ const Accessibility = () => {
     }
     localStorage.setItem('accessibility_reduceMotion', reduceMotion.toString());
 
-    // Apply line spacing
     document.documentElement.style.setProperty('--line-spacing-factor', lineSpacing.toString());
     localStorage.setItem('accessibility_lineSpacing', lineSpacing.toString());
 
-    // Apply color scheme
     document.body.className = document.body.className.replace(/color-scheme-\w+/g, '');
     if (colorScheme !== 'default') {
       document.body.classList.add(`color-scheme-${colorScheme}`);
     }
     localStorage.setItem('accessibility_colorScheme', colorScheme);
 
-    // Apply cursor size
     document.body.className = document.body.className.replace(/cursor-size-\w+/g, '');
     if (cursorSize !== 'default') {
       document.body.classList.add(`cursor-size-${cursorSize}`);
     }
     localStorage.setItem('accessibility_cursorSize', cursorSize);
 
-    // Apply font family
     document.documentElement.style.setProperty('--font-family-preference', fontFamily === 'default' ? 'inherit' : fontFamily);
     localStorage.setItem('accessibility_fontFamily', fontFamily);
 
-    // Apply focus highlight
     if (focusHighlight) {
       document.body.classList.add('enhanced-focus');
     } else {
@@ -118,14 +108,12 @@ const Accessibility = () => {
     }
     localStorage.setItem('accessibility_focusHighlight', focusHighlight.toString());
 
-    // Apply image alt text display
     if (imageAltText) {
       document.body.classList.add('show-alt-text');
     } else {
       document.body.classList.remove('show-alt-text');
     }
     localStorage.setItem('accessibility_imageAltText', imageAltText.toString());
-    
   }, [textSize, highContrast, reduceMotion, lineSpacing, colorScheme, cursorSize, fontFamily, focusHighlight, imageAltText]);
 
   const resetSettings = () => {
@@ -158,7 +146,6 @@ const Accessibility = () => {
         <h1 className="text-3xl font-bold mb-8">Accessibility Settings</h1>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Text Size */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -191,7 +178,6 @@ const Accessibility = () => {
             </CardContent>
           </Card>
 
-          {/* Contrast Settings */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -243,11 +229,10 @@ const Accessibility = () => {
             </CardContent>
           </Card>
 
-          {/* Reading Preferences */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Typography className="h-5 w-5" />
+                <Type className="h-5 w-5" />
                 Reading Preferences
               </CardTitle>
               <CardDescription>
@@ -317,7 +302,6 @@ const Accessibility = () => {
             </CardContent>
           </Card>
 
-          {/* Navigation and Focus */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
