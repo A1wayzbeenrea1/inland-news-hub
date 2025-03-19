@@ -10,6 +10,7 @@ export interface Article {
   publishedAt: string;
   slug: string;
   featured?: boolean;
+  tags?: string[]; // Add tags property to the interface
 }
 
 export const articles: Article[] = [
