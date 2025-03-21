@@ -1,4 +1,3 @@
-
 import { fetchLatestNews } from '@/services/newsApiService';
 
 export interface Article {
@@ -13,6 +12,7 @@ export interface Article {
   slug: string;
   featured?: boolean;
   tags?: string[];
+  source?: string;
 }
 
 // Original mock articles
@@ -195,6 +195,19 @@ let apiArticles: Article[] = [];
 let lastFetchTime: number = 0;
 const CACHE_DURATION = 15 * 60 * 1000; // Reduced to 15 minutes for more frequent updates
 
+// Helper function to load admin stories from localStorage
+const getAdminStories = (): Article[] => {
+  try {
+    const savedStories = localStorage.getItem("adminStories");
+    if (savedStories) {
+      return JSON.parse(savedStories);
+    }
+  } catch (error) {
+    console.error("Error loading admin stories:", error);
+  }
+  return [];
+};
+
 // Function to get articles from API and refresh cache if needed
 export const getApiArticles = async (forceFresh = false): Promise<Article[]> => {
   const now = Date.now();
@@ -218,13 +231,19 @@ export const getApiArticles = async (forceFresh = false): Promise<Article[]> => 
 
 // Get articles by category, combining mock and API data
 export const getArticlesByCategory = (category: string, includeApi: boolean = true): Article[] => {
+  // Get admin stories first
+  const adminStories = getAdminStories();
+  const adminCategoryStories = adminStories.filter(article => article.category === category);
+  
   // Start with mock articles
   let result = articles.filter(article => article.category === category);
   
   // Add API articles if available and requested
   if (includeApi && apiArticles.length > 0) {
     const apiCategoryArticles = apiArticles.filter(article => article.category === category);
-    result = [...apiCategoryArticles, ...result];
+    result = [...adminCategoryStories, ...apiCategoryArticles, ...result];
+  } else {
+    result = [...adminCategoryStories, ...result];
   }
   
   return result;
@@ -233,21 +252,24 @@ export const getArticlesByCategory = (category: string, includeApi: boolean = tr
 // Get featured articles, combining mock and API data
 export const getFeaturedArticles = async (): Promise<Article[]> => {
   await getApiArticles(); // Ensure API articles are loaded
+  const adminStories = getAdminStories();
   
-  // Combine featured articles from both sources
+  // Combine featured articles from all sources
+  const adminFeatured = adminStories.filter(article => article.featured);
   const mockFeatured = articles.filter(article => article.featured);
   const apiFeatured = apiArticles.filter(article => article.featured);
   
-  // Prioritize API featured articles
-  return [...apiFeatured, ...mockFeatured].slice(0, 5);
+  // Prioritize admin featured articles, then API featured articles
+  return [...adminFeatured, ...apiFeatured, ...mockFeatured].slice(0, 5);
 };
 
 // Get most recent articles (new function)
 export const getMostRecentArticles = async (limit: number = 10): Promise<Article[]> => {
   await getApiArticles(); // Ensure API articles are loaded
+  const adminStories = getAdminStories();
   
   // Combine all articles and sort by date
-  const allArticles = [...apiArticles, ...articles];
+  const allArticles = [...adminStories, ...apiArticles, ...articles];
   
   return allArticles
     .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
@@ -256,7 +278,8 @@ export const getMostRecentArticles = async (limit: number = 10): Promise<Article
 
 // Keep the original getRecentArticles for backward compatibility
 export const getRecentArticles = (limit: number = 5): Article[] => {
-  const allArticles = [...apiArticles, ...articles];
+  const adminStories = getAdminStories();
+  const allArticles = [...adminStories, ...apiArticles, ...articles];
   
   return allArticles
     .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
@@ -264,7 +287,12 @@ export const getRecentArticles = (limit: number = 5): Article[] => {
 };
 
 export const getArticleBySlug = (slug: string): Article | undefined => {
-  // Check API articles first for newest content
+  // Check admin stories first for newest content
+  const adminStories = getAdminStories();
+  const adminArticle = adminStories.find(article => article.slug === slug);
+  if (adminArticle) return adminArticle;
+  
+  // Check API articles next
   const apiArticle = apiArticles.find(article => article.slug === slug);
   if (apiArticle) return apiArticle;
   
@@ -276,8 +304,11 @@ export const getRelatedArticles = (slug: string, limit: number = 3): Article[] =
   const article = getArticleBySlug(slug);
   if (!article) return [];
   
-  // Combine both sources
-  const allArticles = [...apiArticles, ...articles];
+  // Get admin stories
+  const adminStories = getAdminStories();
+  
+  // Combine all sources
+  const allArticles = [...adminStories, ...apiArticles, ...articles];
   
   return allArticles
     .filter(a => a.slug !== slug && a.category === article.category)
