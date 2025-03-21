@@ -9,6 +9,7 @@ import { NewsletterSignup } from '@/components/news/NewsletterSignup';
 import { WeatherWidget } from '@/components/news/WeatherWidget';
 import { Separator } from '@/components/ui/separator';
 import { getArticlesByCategory, getRecentArticles } from '@/data/mockData';
+import { Article } from '@/types/article';
 import { Button } from '@/components/ui/button';
 import { ChevronRight } from 'lucide-react';
 

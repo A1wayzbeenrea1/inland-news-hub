@@ -8,7 +8,13 @@ import { CategoryHeader } from '@/components/news/CategoryHeader';
 import { WeatherWidget } from '@/components/news/WeatherWidget';
 import { NewsletterSignup } from '@/components/news/NewsletterSignup';
 import { EventsCalendar } from '@/components/news/EventsCalendar';
-import { getFeaturedArticles, getArticlesByCategory, getRecentArticles, getMostRecentArticles, Article } from '@/data/mockData';
+import { 
+  getFeaturedArticles, 
+  getArticlesByCategory, 
+  getRecentArticles, 
+  getMostRecentArticles 
+} from '@/data/mockData';
+import { Article } from '@/types/article';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
 
