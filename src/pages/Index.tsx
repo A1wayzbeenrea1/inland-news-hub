@@ -9,6 +9,7 @@ import { SectionHeader } from '@/components/common/SectionHeader';
 import { useToast } from '@/hooks/use-toast';
 import { setupRssFeedRefresh } from '@/services/rssFeedService';
 import { Skeleton } from "@/components/ui/skeleton";
+import { FeedspotWidget } from '@/components/news/FeedspotWidget';
 
 const Index = () => {
   const [featuredArticles, setFeaturedArticles] = useState<Article[]>([]);
@@ -233,9 +234,11 @@ const Index = () => {
 
             <section className="mb-8">
               <SectionHeader title="News From Around The Web" />
-              <div ref={feedspotWidgetRef} className="mt-4 rounded-lg shadow-md p-4 bg-white min-h-[400px]">
-                {!loadingComplete && (
+              <div className="mt-4 rounded-lg shadow-md p-4 bg-white min-h-[400px]">
+                {!loadingComplete ? (
                   <Skeleton className="w-full h-[400px]" />
+                ) : (
+                  <div ref={feedspotWidgetRef} />
                 )}
               </div>
             </section>
@@ -243,20 +246,28 @@ const Index = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <section className="mb-8">
                 <SectionHeader title="Redlands Community News" />
-                <div ref={redlandsFeedspotWidgetRef} className="mt-4 rounded-lg shadow-md p-4 bg-white min-h-[600px]">
-                  {!loadingComplete && (
-                    <Skeleton className="w-full h-[600px]" />
-                  )}
-                </div>
+                {!loadingComplete ? (
+                  <Skeleton className="w-full h-[600px] mt-4" />
+                ) : (
+                  <FeedspotWidget 
+                    feedUrl="https://www.feedspot.com/widgets/lookup/vciG7f40a3c5" 
+                    height={600}
+                    className="mt-4"
+                  />
+                )}
               </section>
               
               <section className="mb-8">
                 <SectionHeader title="Yucaipa Community News" />
-                <div ref={yucaipaFeedspotWidgetRef} className="mt-4 rounded-lg shadow-md p-4 bg-white min-h-[600px]">
-                  {!loadingComplete && (
-                    <Skeleton className="w-full h-[600px]" />
-                  )}
-                </div>
+                {!loadingComplete ? (
+                  <Skeleton className="w-full h-[600px] mt-4" />
+                ) : (
+                  <FeedspotWidget 
+                    feedUrl="https://www.feedspot.com/widgets/lookup/vcI7fbedd553" 
+                    height={600}
+                    className="mt-4"
+                  />
+                )}
               </section>
             </div>
 

@@ -2,6 +2,7 @@
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { LazyImage } from "@/components/common/LazyImage";
 
 interface ArticleCardProps {
   article: {
@@ -41,9 +42,9 @@ export const ArticleCard = ({
 
   if (variant === "featured") {
     return (
-      <div className={cn("relative h-[600px] group overflow-hidden rounded-lg", className)}>
+      <div className={cn("relative h-600px] group overflow-hidden rounded-lg", className)}>
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent z-10" />
-        <img
+        <LazyImage
           src={article.image}
           alt={article.title}
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -76,7 +77,7 @@ export const ArticleCard = ({
     return (
       <div className={cn("flex mb-6 group", className)}>
         <Link to={`/article/${article.slug}`} className="shrink-0">
-          <img
+          <LazyImage
             src={article.image}
             alt={article.title}
             className="w-32 h-24 object-cover rounded-md transition-transform group-hover:scale-105"
@@ -122,7 +123,7 @@ export const ArticleCard = ({
     <div className={cn("bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow group", className)}>
       <Link to={`/article/${article.slug}`}>
         <div className="relative h-48 overflow-hidden">
-          <img
+          <LazyImage
             src={article.image}
             alt={article.title}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
