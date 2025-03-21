@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { getArticleBySlug, getRelatedArticles, getArticlesByCategory } from '@/data/mockData';
-import { Article as ArticleType } from '@/types/article';
 
 const Article = () => {
   const { slug } = useParams<{ slug: string }>();
