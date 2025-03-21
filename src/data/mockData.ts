@@ -1,3 +1,4 @@
+
 import { fetchLatestNews } from '@/services/newsApiService';
 import { fetchAllRssFeeds } from '@/services/rssFeedService';
 
@@ -226,11 +227,12 @@ const getAdminStories = (): Article[] => {
       // Ensure all admin stories have valid dates
       const storiesWithValidDates = ensureValidDates(parsedStories);
       
-      // For debugging
-      console.log("Admin stories dates:", storiesWithValidDates.map(story => ({
+      // Log all admin stories for debugging
+      console.log("Admin stories:", storiesWithValidDates.map(story => ({
+        id: story.id,
         title: story.title,
         date: new Date(story.publishedAt).toLocaleString(),
-        source: "Admin"
+        source: story.source || "Admin"
       })));
       
       return storiesWithValidDates;
@@ -314,17 +316,17 @@ export const getArticlesByCategory = async (category: string): Promise<Article[]
 
 // Get featured articles, combining all sources
 export const getFeaturedArticles = async (): Promise<Article[]> => {
+  // Get admin stories
+  const adminStories = getAdminStories();
+  const adminFeatured = adminStories.filter(article => article.featured);
+  
   // Get RSS articles
   await getRssArticles();
   
   // Get API articles
   await getApiArticles();
   
-  // Get admin stories
-  const adminStories = getAdminStories();
-  
   // Combine featured articles from all sources
-  const adminFeatured = adminStories.filter(article => article.featured);
   const mockFeatured = articles.filter(article => article.featured);
   const apiFeatured = apiArticles.filter(article => article.featured);
   
@@ -342,16 +344,32 @@ export const getFeaturedArticles = async (): Promise<Article[]> => {
 export const getMostRecentArticles = async (limit: number = 10): Promise<Article[]> => {
   console.log("getMostRecentArticles: Fetching most recent articles from all sources");
   
+  // Force refresh check
+  const forceRefresh = localStorage.getItem("forceRefresh");
+  const shouldForceRefresh = forceRefresh && (Date.now() - parseInt(forceRefresh)) < 10000; // Force if less than 10 seconds old
+  if (shouldForceRefresh) {
+    console.log("Force refresh requested, clearing caches");
+    localStorage.removeItem("forceRefresh"); // Clear the force refresh flag
+  }
+  
   // Get admin stories with detailed logging
   const adminStories = getAdminStories();
   console.log(`getMostRecentArticles: Found ${adminStories.length} admin stories`);
   
+  if (adminStories.length > 0) {
+    // Check admin stories dates
+    console.log("Admin stories dates:", adminStories.map(story => ({
+      title: story.title,
+      date: new Date(story.publishedAt).toISOString()
+    })));
+  }
+  
   // Get fresh RSS articles
-  const rssArticlesList = await getRssArticles(true);
+  const rssArticlesList = await getRssArticles(shouldForceRefresh);
   console.log(`getMostRecentArticles: Found ${rssArticlesList.length} RSS articles`);
   
   // Get API articles
-  const apiArticlesList = await getApiArticles();
+  const apiArticlesList = await getApiArticles(shouldForceRefresh);
   
   // Combine all articles and validate dates
   const allArticles = ensureValidDates([
@@ -366,6 +384,10 @@ export const getMostRecentArticles = async (limit: number = 10): Promise<Article
   // Sort by date, ensuring proper date comparison
   const sortedArticles = allArticles
     .sort((a, b) => {
+      // Make sure admin stories always appear at the top if they were recently added
+      if (a.source === 'Admin' && !b.source) return -1;
+      if (!a.source && b.source === 'Admin') return 1;
+      
       const dateA = new Date(a.publishedAt);
       const dateB = new Date(b.publishedAt);
       return dateB.getTime() - dateA.getTime();
@@ -395,6 +417,10 @@ export const getRecentArticles = async (limit: number = 5): Promise<Article[]> =
   
   return allArticles
     .sort((a, b) => {
+      // Make sure admin stories always appear at the top if they were recently added
+      if (a.source === 'Admin' && !b.source) return -1;
+      if (!a.source && b.source === 'Admin') return 1;
+      
       const dateA = new Date(a.publishedAt);
       const dateB = new Date(b.publishedAt);
       return dateB.getTime() - dateA.getTime();
@@ -438,4 +464,3 @@ export const getRelatedArticles = async (slug: string, limit: number = 3): Promi
     .filter(a => a.slug !== slug && a.category === article.category)
     .slice(0, limit);
 };
-

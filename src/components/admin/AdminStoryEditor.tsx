@@ -101,10 +101,10 @@ export function AdminStoryEditor({ story, onCancel, onSave }: AdminStoryEditorPr
   const onSubmit = (data: StoryFormValues) => {
     setIsSubmitting(true);
     
-    // Prepare the story object
+    // Prepare the story object with current timestamp
     const currentDate = new Date().toISOString();
     const savedStory: Article = {
-      id: story?.id || `story-${Date.now()}`,
+      id: story?.id || `admin-story-${Date.now()}`,
       title: data.title,
       slug: data.slug,
       content: data.content,
@@ -113,8 +113,9 @@ export function AdminStoryEditor({ story, onCancel, onSave }: AdminStoryEditorPr
       featured: data.featured,
       image: imagePreview || "https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=1170&auto=format&fit=crop",
       author: story?.author || "Admin User",
-      publishedAt: story?.publishedAt || currentDate,
-      tags: story?.tags || [data.category, "News", "Inland Empire"]
+      publishedAt: currentDate, // Always use current date for new/updated stories
+      tags: story?.tags || [data.category, "News", "Inland Empire"],
+      source: "Admin" // Mark as admin source for identification
     };
     
     console.log(`Saving story with date: ${savedStory.publishedAt}`);
@@ -124,6 +125,9 @@ export function AdminStoryEditor({ story, onCancel, onSave }: AdminStoryEditorPr
         title: story ? "Story updated" : "Story created",
         description: `"${data.title}" has been successfully ${story ? "updated" : "saved"}.`,
       });
+      
+      // Force a refresh in the MockData cache
+      localStorage.setItem("forceRefresh", Date.now().toString());
       
       setIsSubmitting(false);
       onSave(savedStory);

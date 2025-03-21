@@ -20,6 +20,10 @@ const MostRecentCategoryPage = () => {
     const loadArticles = async () => {
       setIsLoading(true);
       try {
+        // Check for force refresh
+        const forceRefresh = localStorage.getItem("forceRefresh");
+        const shouldForceRefresh = forceRefresh && (Date.now() - parseInt(forceRefresh)) < 10000; // Force if less than 10 seconds old
+        
         // Force a fresh load to ensure we get the latest stories
         const mostRecent = await getMostRecentArticles(30);
         console.log('Most Recent Articles loaded:', mostRecent.length);
@@ -48,7 +52,8 @@ const MostRecentCategoryPage = () => {
               id: story.id,
               title: story.title,
               date: new Date(story.publishedAt),
-              dateStr: story.publishedAt
+              dateStr: story.publishedAt,
+              source: story.source || 'Admin'
             }));
             console.log('Admin stories dates:', adminDatesSorted);
             
@@ -58,13 +63,44 @@ const MostRecentCategoryPage = () => {
             );
             console.log(`Found ${adminIdsInMostRecent.length} admin stories in most recent articles:`, 
               adminIdsInMostRecent.map(a => a.title));
+            
+            // If admin stories are missing from mostRecent, manually combine them
+            if (adminIdsInMostRecent.length < parsedStories.length) {
+              console.log("Adding missing admin stories to the articles list");
+              
+              // Get admin stories that aren't in mostRecent
+              const missingAdminStories = parsedStories.filter((adminStory: Article) => 
+                !mostRecent.some(article => article.id === adminStory.id)
+              );
+              
+              // Manually add the missing admin stories
+              if (missingAdminStories.length > 0) {
+                console.log(`Adding ${missingAdminStories.length} missing admin stories`);
+                
+                // Combine and sort by date
+                const combinedArticles = [...mostRecent, ...missingAdminStories].sort((a, b) => 
+                  new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+                );
+                
+                setArticles(combinedArticles);
+                
+                toast({
+                  title: "Articles Loaded",
+                  description: `Loaded ${combinedArticles.length} articles including ${missingAdminStories.length} admin stories`,
+                  duration: 3000,
+                });
+                
+                setIsLoading(false);
+                return;
+              }
+            }
           }
         } else {
           console.log('No admin stories found in localStorage');
         }
         
         // Check for RSS articles
-        const rssArticles = await getRssArticles(true);
+        const rssArticles = await getRssArticles(shouldForceRefresh);
         console.log(`Loaded ${rssArticles.length} articles from RSS feeds`);
         
         // RSS articles should already be in mostRecent, but log to confirm
@@ -137,7 +173,7 @@ const MostRecentCategoryPage = () => {
                   <ArticleCard 
                     key={article.id} 
                     article={article} 
-                    badgeText={article.source && article.id.startsWith('rss-') ? article.source : undefined}
+                    badgeText={article.source && (article.id.startsWith('rss-') || article.source === 'Admin') ? article.source : undefined}
                   />
                 ))}
               </div>

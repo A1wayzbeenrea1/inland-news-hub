@@ -115,6 +115,9 @@ const AdminDashboard = () => {
           category: story.category
         }))
       );
+      
+      // Force a refresh of the stories in mockData by clearing any cached data
+      localStorage.setItem("forceRefresh", Date.now().toString());
     }
   }, [stories, toast]);
 
@@ -143,26 +146,28 @@ const AdminDashboard = () => {
   };
 
   const handleSaveStory = (story: Article) => {
-    // Make sure the story has a valid date
-    if (!story.publishedAt) {
-      story.publishedAt = new Date().toISOString();
-    }
+    // Make sure the story has a valid date and is marked as an admin story
+    const enhancedStory = {
+      ...story,
+      publishedAt: story.publishedAt || new Date().toISOString(),
+      source: "Admin" // Mark as admin source for identification
+    };
     
     // Check if story already exists
-    const index = stories.findIndex(s => s.id === story.id);
+    const index = stories.findIndex(s => s.id === enhancedStory.id);
     
     if (index >= 0) {
       // Update existing story
       setStories(prevStories => {
         const newStories = [...prevStories];
-        newStories[index] = story;
+        newStories[index] = enhancedStory;
         return newStories;
       });
-      console.log(`Updated story: ${story.title}`);
+      console.log(`Updated story: ${enhancedStory.title}`);
     } else {
       // Add new story
-      setStories(prevStories => [...prevStories, story]);
-      console.log(`Added new story: ${story.title}`);
+      setStories(prevStories => [...prevStories, enhancedStory]);
+      console.log(`Added new story: ${enhancedStory.title}`);
     }
     
     // Save immediately to localStorage
@@ -175,30 +180,28 @@ const AdminDashboard = () => {
   };
 
   const handleAddStoryFromUrl = (story: Article) => {
-    // Make sure the story has a valid date
-    if (!story.publishedAt) {
-      story.publishedAt = new Date().toISOString();
-    }
+    // Make sure the story has a valid date and is marked as an admin story
+    const enhancedStory = {
+      ...story,
+      publishedAt: story.publishedAt || new Date().toISOString(),
+      source: "Admin" // Mark as admin source for identification
+    };
     
     // Add the new story from URL importer
-    setStories(prevStories => [...prevStories, story]);
-    console.log(`Added new story from URL: ${story.title}`);
+    setStories(prevStories => [...prevStories, enhancedStory]);
+    console.log(`Added new story from URL: ${enhancedStory.title}`);
     
     // Go back to the list view
     setActiveView("list");
   };
 
   const handleAddStoriesFromKtla = (newStories: Article[]) => {
-    // Make sure all stories have valid dates
-    const storiesWithDates = newStories.map(story => {
-      if (!story.publishedAt) {
-        return {
-          ...story,
-          publishedAt: new Date().toISOString()
-        };
-      }
-      return story;
-    });
+    // Make sure all stories have valid dates and are marked as admin stories
+    const storiesWithDates = newStories.map(story => ({
+      ...story,
+      publishedAt: story.publishedAt || new Date().toISOString(),
+      source: "Admin" // Mark as admin source for identification
+    }));
     
     // Add multiple stories from KTLA importer
     setStories(prevStories => [...prevStories, ...storiesWithDates]);
