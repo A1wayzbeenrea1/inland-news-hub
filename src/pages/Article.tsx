@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+
+import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Share2, Printer, BookmarkPlus, Calendar, User, Clock } from 'lucide-react';
+import { ChevronLeft, Share2, Printer, BookmarkPlus, Calendar, User, Clock, Facebook, Twitter, Linkedin, Copy, CheckCircle } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { AdBanner } from '@/components/layout/AdBanner';
@@ -9,15 +10,63 @@ import { NewsletterSignup } from '@/components/news/NewsletterSignup';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { getArticleBySlug, getRelatedArticles, getArticlesByCategory } from '@/data/mockData';
+import { getArticleBySlug, getRelatedArticles, getArticlesByCategory, Article as ArticleType } from '@/data/mockData';
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { toast } from "@/components/ui/use-toast";
+import { MetaTags } from '@/components/common/MetaTags';
 
 const Article = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const [article, setArticle] = useState<ArticleType | null>(null);
+  const [relatedArticles, setRelatedArticles] = useState<ArticleType[]>([]);
+  const [copied, setCopied] = useState(false);
+  const [loading, setLoading] = useState(true);
   
-  const article = getArticleBySlug(slug || '');
-  const relatedArticles = getRelatedArticles(slug || '', 3);
-  
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    
+    const loadArticle = () => {
+      setLoading(true);
+      
+      // First try to get from regular articles
+      let foundArticle = getArticleBySlug(slug || '');
+      
+      // If not found, check localStorage for admin stories
+      if (!foundArticle && slug) {
+        const adminStories = localStorage.getItem("adminStories");
+        if (adminStories) {
+          try {
+            const stories = JSON.parse(adminStories) as ArticleType[];
+            foundArticle = stories.find(story => story.slug === slug);
+            
+            if (foundArticle) {
+              console.log("Found admin story in localStorage:", foundArticle.title);
+            }
+          } catch (error) {
+            console.error("Error parsing admin stories:", error);
+          }
+        }
+      }
+      
+      if (foundArticle) {
+        setArticle(foundArticle);
+        // Get related articles based on the category
+        setRelatedArticles(getRelatedArticles(slug || '', 3));
+      } else if (slug) {
+        navigate('/not-found');
+      }
+      
+      setLoading(false);
+    };
+    
+    loadArticle();
+  }, [navigate, slug]);
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('en-US', { 
@@ -31,18 +80,65 @@ const Article = () => {
     }).format(date);
   };
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
+  const handleCopyLink = () => {
+    const articleUrl = `${window.location.origin}/article/${slug}`;
+    navigator.clipboard.writeText(articleUrl);
+    setCopied(true);
     
-    if (!article && slug) {
-      navigate('/not-found');
+    toast({
+      title: "Link copied to clipboard",
+      description: "You can now share this article with others",
+    });
+    
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const shareOnSocialMedia = (platform: 'facebook' | 'twitter' | 'linkedin') => {
+    if (!article) return;
+    
+    const articleUrl = encodeURIComponent(`${window.location.origin}/article/${slug}`);
+    const title = encodeURIComponent(article.title);
+    const hashtags = encodeURIComponent('InlandEmpireNews,LocalNews');
+    
+    let shareUrl = '';
+    
+    switch (platform) {
+      case 'facebook':
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${articleUrl}`;
+        break;
+      case 'twitter':
+        shareUrl = `https://twitter.com/intent/tweet?url=${articleUrl}&text=${title}&hashtags=${hashtags}`;
+        break;
+      case 'linkedin':
+        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${articleUrl}`;
+        break;
     }
-  }, [article, navigate, slug]);
+    
+    window.open(shareUrl, '_blank', 'width=600,height=400');
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin h-10 w-10 border-4 border-news-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
 
   if (!article) return null;
 
+  // Generate a simplified text-only version for social media
+  const socialMediaContent = `${article.title}\n\n${article.excerpt}\n\nRead more at: ${window.location.origin}/article/${slug}`;
+
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <>
+      <MetaTags 
+        title={`${article.title} | Inland Empire News Hub`}
+        description={article.excerpt}
+        ogImage={article.image}
+        ogType="article"
+      />
+      
       <Header />
       
       <main className="flex-grow">
@@ -50,7 +146,7 @@ const Article = () => {
           <div className="flex items-center text-sm text-gray-500 mb-4">
             <Link to="/" className="hover:text-news-primary">Home</Link>
             <span className="mx-2">/</span>
-            <Link to={`/${article.category.toLowerCase().replace(' ', '-')}`} className="hover:text-news-primary">
+            <Link to={`/category/${article.category.toLowerCase().replace(' ', '-')}`} className="hover:text-news-primary">
               {article.category}
             </Link>
             <span className="mx-2">/</span>
@@ -61,7 +157,7 @@ const Article = () => {
             <div className="lg:col-span-2">
               <div className="mb-6">
                 <Link 
-                  to={`/${article.category.toLowerCase().replace(' ', '-')}`}
+                  to={`/category/${article.category.toLowerCase().replace(' ', '-')}`}
                   className="inline-block mb-2"
                 >
                   <Badge className="bg-news-secondary hover:bg-news-primary border-none text-sm">
@@ -81,6 +177,11 @@ const Article = () => {
                     <Calendar size={16} className="mr-1" />
                     <span>{formatDate(article.publishedAt)}</span>
                   </div>
+                  {article.source && (
+                    <div className="flex items-center">
+                      <span className="text-news-primary">Source: {article.source}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -102,10 +203,64 @@ const Article = () => {
                   <ChevronLeft size={16} className="mr-1" /> Back
                 </Button>
                 <div className="flex space-x-2">
-                  <Button variant="outline" size="sm" className="text-gray-600">
-                    <Share2 size={16} className="mr-1" /> Share
-                  </Button>
-                  <Button variant="outline" size="sm" className="text-gray-600">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="text-gray-600">
+                        <Share2 size={16} className="mr-1" /> Share
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-2">
+                      <div className="flex flex-col space-y-2">
+                        <div className="text-sm font-medium text-gray-900 mb-2">Share this article</div>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="bg-[#1877F2] text-white hover:bg-[#0E5FC0] hover:text-white"
+                            onClick={() => shareOnSocialMedia('facebook')}
+                          >
+                            <Facebook size={16} />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="bg-[#1DA1F2] text-white hover:bg-[#0E8BD8] hover:text-white"
+                            onClick={() => shareOnSocialMedia('twitter')}
+                          >
+                            <Twitter size={16} />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="bg-[#0A66C2] text-white hover:bg-[#084d93] hover:text-white"
+                            onClick={() => shareOnSocialMedia('linkedin')}
+                          >
+                            <Linkedin size={16} />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className={copied ? "bg-green-500 text-white" : ""}
+                            onClick={handleCopyLink}
+                          >
+                            {copied ? <CheckCircle size={16} /> : <Copy size={16} />}
+                          </Button>
+                        </div>
+                        <textarea 
+                          className="w-full p-2 text-xs text-gray-700 border border-gray-300 rounded-md mt-2"
+                          rows={4}
+                          value={socialMediaContent}
+                          readOnly
+                          onClick={(e) => e.currentTarget.select()}
+                        />
+                        <div className="text-xs text-gray-500">
+                          *Copy the text above for social media posts or emails
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                  
+                  <Button variant="outline" size="sm" className="text-gray-600" onClick={() => window.print()}>
                     <Printer size={16} className="mr-1" /> Print
                   </Button>
                   <Button variant="outline" size="sm" className="text-gray-600">
@@ -129,6 +284,11 @@ const Article = () => {
                 <Badge variant="outline" className="bg-gray-100 hover:bg-gray-200 text-gray-700">
                   Local News
                 </Badge>
+                {article.tags && article.tags.map(tag => (
+                  <Badge key={tag} variant="outline" className="bg-gray-100 hover:bg-gray-200 text-gray-700">
+                    {tag}
+                  </Badge>
+                ))}
               </div>
 
               <Separator className="my-8" />
@@ -176,7 +336,7 @@ const Article = () => {
       </main>
 
       <Footer />
-    </div>
+    </>
   );
 };
 

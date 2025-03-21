@@ -13,6 +13,7 @@ declare module "@/data/mockData" {
     featured?: boolean;
     tags?: string[];
     source?: string;
+    shareText?: string; // Added for social media sharing
   }
 
   // Add function declarations
