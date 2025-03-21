@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { ArticleCard } from '@/components/news/ArticleCard';
@@ -33,8 +32,6 @@ const Index = () => {
         const forceRefresh = localStorage.getItem("forceRefresh");
         const shouldForceRefresh = forceRefresh && (Date.now() - parseInt(forceRefresh)) < 10000;
         
-        // Fix: The function calls return Promises, not arrays with a catch method
-        // We need to handle errors properly within the Promise.all error handler
         const results = await Promise.all([
           getFeaturedArticles(),
           getArticlesByCategory('Public Safety'),
@@ -76,7 +73,6 @@ const Index = () => {
           localStorage.removeItem("forceRefresh");
         }
         
-        // Mark loading as complete after successful data fetch
         setLoadingComplete(true);
         isInitialLoad.current = false;
       } catch (error) {
@@ -93,12 +89,10 @@ const Index = () => {
 
     loadAsyncData();
     
-    // Set up RSS feed refresh only once
     if (!rssFeedIntervalRef.current) {
       rssFeedIntervalRef.current = setupRssFeedRefresh(async () => {
         console.log("RSS feeds refreshed, reloading articles");
         
-        // Don't set loading to true on RSS refresh, just update the data quietly
         try {
           const results = await Promise.all([
             getFeaturedArticles(),
@@ -108,10 +102,9 @@ const Index = () => {
             getArticlesByCategory('Business')
           ]).catch(err => {
             console.error("Error refreshing articles:", err);
-            return null; // Return null on error to skip updates
+            return null;
           });
           
-          // Only update state if we got valid results
           if (results) {
             const [
               featuredArticlesData,
@@ -131,7 +124,6 @@ const Index = () => {
           }
         } catch (error) {
           console.error("Error during RSS refresh:", error);
-          // Don't show toast on background refresh errors
         }
       }, 26.25);
     }
@@ -144,10 +136,8 @@ const Index = () => {
     };
   }, [toast]);
 
-  // Separate effect for Feedspot widgets to prevent them from reloading on data changes
   useEffect(() => {
     const loadFeedspotWidgets = () => {
-      // Only load widgets if we're not in the loading state
       if (isLoading) return;
       
       if (feedspotWidgetRef.current) {
@@ -176,7 +166,7 @@ const Index = () => {
           iframe.allowFullscreen = true;
           iframe.scrolling = 'no';
           iframe.style.width = '100%';
-          iframe.style.height = '476px';
+          iframe.style.height = '600px';
           iframe.style.visibility = 'visible';
           iframe.src = 'https://www.feedspot.com/widgets/lookup/vciG7f40a3c5';
           
@@ -196,9 +186,9 @@ const Index = () => {
           iframe.allowFullscreen = true;
           iframe.scrolling = 'no';
           iframe.style.width = '100%';
-          iframe.style.height = '476px';
+          iframe.style.height = '600px';
           iframe.style.visibility = 'visible';
-          iframe.src = 'https://www.feedspot.com/widgets/lookup/vciG7f40a3c5';
+          iframe.src = 'https://www.feedspot.com/widgets/lookup/vcI7fbedd553';
           
           yucaipaFeedspotWidgetRef.current.innerHTML = '';
           yucaipaFeedspotWidgetRef.current.appendChild(iframe);
@@ -208,7 +198,6 @@ const Index = () => {
       }
     };
     
-    // Load widgets only after data is loaded
     if (!isLoading && loadingComplete) {
       loadFeedspotWidgets();
     }
@@ -244,9 +233,9 @@ const Index = () => {
 
             <section className="mb-8">
               <SectionHeader title="News From Around The Web" />
-              <div ref={feedspotWidgetRef} className="mt-4 rounded-lg shadow-md p-4 bg-white min-h-[350px]">
+              <div ref={feedspotWidgetRef} className="mt-4 rounded-lg shadow-md p-4 bg-white min-h-[400px]">
                 {!loadingComplete && (
-                  <Skeleton className="w-full h-[350px]" />
+                  <Skeleton className="w-full h-[400px]" />
                 )}
               </div>
             </section>
@@ -254,18 +243,18 @@ const Index = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <section className="mb-8">
                 <SectionHeader title="Redlands Community News" />
-                <div ref={redlandsFeedspotWidgetRef} className="mt-4 rounded-lg shadow-md p-4 bg-white min-h-[350px]">
+                <div ref={redlandsFeedspotWidgetRef} className="mt-4 rounded-lg shadow-md p-4 bg-white min-h-[600px]">
                   {!loadingComplete && (
-                    <Skeleton className="w-full h-[350px]" />
+                    <Skeleton className="w-full h-[600px]" />
                   )}
                 </div>
               </section>
               
               <section className="mb-8">
                 <SectionHeader title="Yucaipa Community News" />
-                <div ref={yucaipaFeedspotWidgetRef} className="mt-4 rounded-lg shadow-md p-4 bg-white min-h-[350px]">
+                <div ref={yucaipaFeedspotWidgetRef} className="mt-4 rounded-lg shadow-md p-4 bg-white min-h-[600px]">
                   {!loadingComplete && (
-                    <Skeleton className="w-full h-[350px]" />
+                    <Skeleton className="w-full h-[600px]" />
                   )}
                 </div>
               </section>
