@@ -4,9 +4,10 @@ import { Layout } from '@/components/layout/Layout';
 import { ArticleCard } from '@/components/news/ArticleCard';
 import { CategoryHeader } from '@/components/news/CategoryHeader';
 import { AdBanner } from '@/components/layout/AdBanner';
-import { getMostRecentArticles, Article } from '@/data/mockData';
+import { getMostRecentArticles, Article, getRssArticles } from '@/data/mockData';
 import { MetaTags } from '@/components/common/MetaTags';
 import { useToast } from '@/hooks/use-toast';
+import { setupRssFeedRefresh } from '@/services/rssFeedService';
 
 const MostRecentCategoryPage = () => {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -14,10 +15,12 @@ const MostRecentCategoryPage = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    let rssRefreshInterval: number | null = null;
+    
     const loadArticles = async () => {
       setIsLoading(true);
       try {
-        // Force a fresh load to ensure we get the latest admin stories
+        // Force a fresh load to ensure we get the latest stories
         const mostRecent = await getMostRecentArticles(30);
         console.log('Most Recent Articles loaded:', mostRecent.length);
         
@@ -26,6 +29,7 @@ const MostRecentCategoryPage = () => {
           const datesSorted = mostRecent.map(article => ({
             id: article.id,
             title: article.title,
+            source: article.source || 'Unknown',
             date: new Date(article.publishedAt),
             dateStr: article.publishedAt
           }));
@@ -59,13 +63,24 @@ const MostRecentCategoryPage = () => {
           console.log('No admin stories found in localStorage');
         }
         
+        // Check for RSS articles
+        const rssArticles = await getRssArticles(true);
+        console.log(`Loaded ${rssArticles.length} articles from RSS feeds`);
+        
+        // RSS articles should already be in mostRecent, but log to confirm
+        const rssInMostRecent = mostRecent.filter(article => 
+          article.id.startsWith('rss-')
+        );
+        console.log(`Found ${rssInMostRecent.length} RSS articles in most recent:`, 
+          rssInMostRecent.map(a => a.title));
+        
         setArticles(mostRecent);
         
         // Show toast if articles were loaded
         if (mostRecent.length > 0) {
           toast({
             title: "Articles Loaded",
-            description: `Loaded ${mostRecent.length} most recent articles`,
+            description: `Loaded ${mostRecent.length} most recent articles including RSS feeds`,
             duration: 3000,
           });
         }
@@ -81,7 +96,21 @@ const MostRecentCategoryPage = () => {
       }
     };
 
+    // Set up RSS feed refreshing
+    rssRefreshInterval = setupRssFeedRefresh(async () => {
+      console.log("RSS feeds refreshed, reloading articles");
+      await loadArticles();
+    }, 15); // Refresh every 15 minutes
+    
+    // Initial load
     loadArticles();
+    
+    // Cleanup function
+    return () => {
+      if (rssRefreshInterval !== null) {
+        clearInterval(rssRefreshInterval);
+      }
+    };
   }, [toast]);
 
   return (
@@ -105,7 +134,11 @@ const MostRecentCategoryPage = () => {
             {articles.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
                 {articles.map((article) => (
-                  <ArticleCard key={article.id} article={article} />
+                  <ArticleCard 
+                    key={article.id} 
+                    article={article} 
+                    badgeText={article.source && article.id.startsWith('rss-') ? article.source : undefined}
+                  />
                 ))}
               </div>
             ) : (

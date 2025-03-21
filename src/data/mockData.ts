@@ -1,5 +1,5 @@
-
 import { fetchLatestNews } from '@/services/newsApiService';
+import { fetchAllRssFeeds } from '@/services/rssFeedService';
 
 export interface Article {
   id: string;
@@ -191,10 +191,15 @@ export const articles: Article[] = [
   }
 ];
 
+// Cache for RSS feed articles
+let rssArticles: Article[] = [];
+let rssLastFetchTime: number = 0;
+const RSS_CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+
 // Cache for API fetched articles
 let apiArticles: Article[] = [];
 let lastFetchTime: number = 0;
-const CACHE_DURATION = 15 * 60 * 1000; // Reduced to 15 minutes for more frequent updates
+const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes
 
 // Helper function to ensure valid dates on articles
 const ensureValidDates = (articles: Article[]): Article[] => {
@@ -237,6 +242,30 @@ const getAdminStories = (): Article[] => {
   return [];
 };
 
+// Function to get RSS feed articles and refresh cache if needed
+export const getRssArticles = async (forceFresh = false): Promise<Article[]> => {
+  const now = Date.now();
+  
+  // Check if cache is stale or a fresh fetch is requested
+  if (forceFresh || rssArticles.length === 0 || now - rssLastFetchTime > RSS_CACHE_DURATION) {
+    try {
+      console.log("Fetching fresh RSS data at", new Date().toLocaleTimeString());
+      const newArticles = await fetchAllRssFeeds();
+      if (newArticles && newArticles.length > 0) {
+        rssArticles = newArticles;
+        rssLastFetchTime = now;
+        console.log(`Updated RSS articles cache with ${newArticles.length} articles`);
+      }
+    } catch (error) {
+      console.error("Error refreshing RSS articles:", error);
+    }
+  } else {
+    console.log("Using cached RSS articles from", new Date(rssLastFetchTime).toLocaleTimeString());
+  }
+  
+  return rssArticles;
+};
+
 // Function to get articles from API and refresh cache if needed
 export const getApiArticles = async (forceFresh = false): Promise<Article[]> => {
   const now = Date.now();
@@ -244,44 +273,54 @@ export const getApiArticles = async (forceFresh = false): Promise<Article[]> => 
   // Check if cache is stale or a fresh fetch is requested
   if (forceFresh || apiArticles.length === 0 || now - lastFetchTime > CACHE_DURATION) {
     try {
-      console.log("Fetching fresh news data at", new Date().toLocaleTimeString());
-      const newArticles = await fetchLatestNews(20); // Increased to 20 articles for more variety
+      console.log("Fetching fresh news API data at", new Date().toLocaleTimeString());
+      const newArticles = await fetchLatestNews(20);
       if (newArticles && newArticles.length > 0) {
         apiArticles = newArticles;
         lastFetchTime = now;
       }
     } catch (error) {
-      console.error("Error refreshing news articles:", error);
+      console.error("Error refreshing news API articles:", error);
     }
   }
   
   return apiArticles;
 };
 
-// Get articles by category, combining mock and API data
-export const getArticlesByCategory = (category: string, includeApi: boolean = true): Article[] => {
+// Get articles by category, combining all sources
+export const getArticlesByCategory = async (category: string): Promise<Article[]> => {
   // Get admin stories first - ensure they take priority
   const adminStories = getAdminStories();
   const adminCategoryStories = adminStories.filter(article => article.category === category);
   console.log(`Found ${adminCategoryStories.length} admin stories for category ${category}`);
   
-  // Start with mock articles
+  // Start with mock articles for this category
   let result = articles.filter(article => article.category === category);
   
-  // Add API articles if available and requested
-  if (includeApi && apiArticles.length > 0) {
-    const apiCategoryArticles = apiArticles.filter(article => article.category === category);
-    result = [...adminCategoryStories, ...apiCategoryArticles, ...result];
-  } else {
-    result = [...adminCategoryStories, ...result];
-  }
+  // Add RSS feed articles if available
+  const rssArticlesList = await getRssArticles();
+  const rssCategoryArticles = rssArticlesList.filter(article => article.category === category);
   
-  return result;
+  // Add API articles if available
+  const apiArticlesList = await getApiArticles();
+  const apiCategoryArticles = apiArticlesList.filter(article => article.category === category);
+  
+  // Combine all sources, prioritizing admin stories
+  result = [...adminCategoryStories, ...rssCategoryArticles, ...apiCategoryArticles, ...result];
+  
+  // Sort by date (newest first)
+  return result.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 };
 
-// Get featured articles, combining mock and API data
+// Get featured articles, combining all sources
 export const getFeaturedArticles = async (): Promise<Article[]> => {
-  await getApiArticles(); // Ensure API articles are loaded
+  // Get RSS articles
+  await getRssArticles();
+  
+  // Get API articles
+  await getApiArticles();
+  
+  // Get admin stories
   const adminStories = getAdminStories();
   
   // Combine featured articles from all sources
@@ -289,20 +328,39 @@ export const getFeaturedArticles = async (): Promise<Article[]> => {
   const mockFeatured = articles.filter(article => article.featured);
   const apiFeatured = apiArticles.filter(article => article.featured);
   
-  // Prioritize admin featured articles, then API featured articles
-  return [...adminFeatured, ...apiFeatured, ...mockFeatured].slice(0, 5);
+  // Select some RSS articles to feature (newest 2)
+  const rssFeatured = rssArticles.slice(0, 2).map(article => ({
+    ...article,
+    featured: true
+  }));
+  
+  // Prioritize admin featured articles, then RSS, then API, then mock
+  return [...adminFeatured, ...rssFeatured, ...apiFeatured, ...mockFeatured].slice(0, 5);
 };
 
-// Get most recent articles (fixed to properly include admin stories)
+// Get most recent articles from all sources
 export const getMostRecentArticles = async (limit: number = 10): Promise<Article[]> => {
-  await getApiArticles(); // Ensure API articles are loaded
+  console.log("getMostRecentArticles: Fetching most recent articles from all sources");
   
   // Get admin stories with detailed logging
   const adminStories = getAdminStories();
   console.log(`getMostRecentArticles: Found ${adminStories.length} admin stories`);
   
+  // Get fresh RSS articles
+  const rssArticlesList = await getRssArticles(true);
+  console.log(`getMostRecentArticles: Found ${rssArticlesList.length} RSS articles`);
+  
+  // Get API articles
+  const apiArticlesList = await getApiArticles();
+  
   // Combine all articles and validate dates
-  const allArticles = ensureValidDates([...adminStories, ...apiArticles, ...articles]);
+  const allArticles = ensureValidDates([
+    ...adminStories, 
+    ...rssArticlesList,
+    ...apiArticlesList, 
+    ...articles
+  ]);
+  
   console.log(`getMostRecentArticles: Combined ${allArticles.length} total articles`);
   
   // Sort by date, ensuring proper date comparison
@@ -318,19 +376,22 @@ export const getMostRecentArticles = async (limit: number = 10): Promise<Article
   console.log('Sorted articles dates:', sortedArticles.map(article => ({
     title: article.title,
     date: new Date(article.publishedAt).toISOString(),
-    source: adminStories.some(a => a.id === article.id) ? "Admin" : "Regular"
+    source: article.source || (adminStories.some(a => a.id === article.id) ? "Admin" : "Regular")
   })));
   
   console.log(`getMostRecentArticles: Returning ${sortedArticles.length} articles`);
   return sortedArticles;
 };
 
-// Keep the original getRecentArticles for backward compatibility but fix it
-export const getRecentArticles = (limit: number = 5): Article[] => {
+// Keep the original getRecentArticles for backward compatibility but fix it to include RSS
+export const getRecentArticles = async (limit: number = 5): Promise<Article[]> => {
   const adminStories = getAdminStories();
   console.log(`getRecentArticles: Found ${adminStories.length} admin stories`);
   
-  const allArticles = ensureValidDates([...adminStories, ...apiArticles, ...articles]);
+  // Get RSS articles
+  const rssArticlesList = await getRssArticles();
+  
+  const allArticles = ensureValidDates([...adminStories, ...rssArticlesList, ...apiArticles, ...articles]);
   
   return allArticles
     .sort((a, b) => {
@@ -341,11 +402,16 @@ export const getRecentArticles = (limit: number = 5): Article[] => {
     .slice(0, limit);
 };
 
-export const getArticleBySlug = (slug: string): Article | undefined => {
+export const getArticleBySlug = async (slug: string): Promise<Article | undefined> => {
   // Check admin stories first for newest content
   const adminStories = getAdminStories();
   const adminArticle = adminStories.find(article => article.slug === slug);
   if (adminArticle) return adminArticle;
+  
+  // Check RSS articles next
+  const rssArticlesList = await getRssArticles();
+  const rssArticle = rssArticlesList.find(article => article.slug === slug);
+  if (rssArticle) return rssArticle;
   
   // Check API articles next
   const apiArticle = apiArticles.find(article => article.slug === slug);
@@ -355,17 +421,21 @@ export const getArticleBySlug = (slug: string): Article | undefined => {
   return articles.find(article => article.slug === slug);
 };
 
-export const getRelatedArticles = (slug: string, limit: number = 3): Article[] => {
-  const article = getArticleBySlug(slug);
+export const getRelatedArticles = async (slug: string, limit: number = 3): Promise<Article[]> => {
+  const article = await getArticleBySlug(slug);
   if (!article) return [];
   
   // Get admin stories
   const adminStories = getAdminStories();
   
+  // Get RSS articles
+  const rssArticlesList = await getRssArticles();
+  
   // Combine all sources
-  const allArticles = [...adminStories, ...apiArticles, ...articles];
+  const allArticles = [...adminStories, ...rssArticlesList, ...apiArticles, ...articles];
   
   return allArticles
     .filter(a => a.slug !== slug && a.category === article.category)
     .slice(0, limit);
 };
+
