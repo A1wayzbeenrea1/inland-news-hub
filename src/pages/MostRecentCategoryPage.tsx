@@ -24,6 +24,7 @@ const MostRecentCategoryPage = () => {
         // Debug date information
         if (mostRecent.length > 0) {
           const datesSorted = mostRecent.map(article => ({
+            id: article.id,
             title: article.title,
             date: new Date(article.publishedAt),
             dateStr: article.publishedAt
@@ -40,11 +41,19 @@ const MostRecentCategoryPage = () => {
           // Debug admin stories dates
           if (parsedStories.length > 0) {
             const adminDatesSorted = parsedStories.map((story: Article) => ({
+              id: story.id,
               title: story.title,
               date: new Date(story.publishedAt),
               dateStr: story.publishedAt
             }));
             console.log('Admin stories dates:', adminDatesSorted);
+            
+            // Check if admin stories are included in most recent
+            const adminIdsInMostRecent = mostRecent.filter(article => 
+              parsedStories.some((adminStory: Article) => adminStory.id === article.id)
+            );
+            console.log(`Found ${adminIdsInMostRecent.length} admin stories in most recent articles:`, 
+              adminIdsInMostRecent.map(a => a.title));
           }
         } else {
           console.log('No admin stories found in localStorage');

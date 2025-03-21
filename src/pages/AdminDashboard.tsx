@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -53,29 +54,67 @@ const AdminDashboard = () => {
     }
     
     // Load stories from localStorage if available
-    const savedStories = localStorage.getItem("adminStories");
-    if (savedStories) {
-      try {
-        const parsedStories = JSON.parse(savedStories);
-        console.log(`Loaded ${parsedStories.length} admin stories from localStorage`);
-        setStories(parsedStories);
-      } catch (error) {
-        console.error("Error loading stories:", error);
+    const loadAdminStories = () => {
+      const savedStories = localStorage.getItem("adminStories");
+      if (savedStories) {
+        try {
+          const parsedStories = JSON.parse(savedStories);
+          console.log(`Loaded ${parsedStories.length} admin stories from localStorage`);
+          
+          // Ensure all stories have valid dates
+          const storiesWithValidDates = parsedStories.map((story: Article) => {
+            if (!story.publishedAt || isNaN(new Date(story.publishedAt).getTime())) {
+              console.log(`Story with invalid date found: ${story.title}`);
+              return {
+                ...story,
+                publishedAt: new Date().toISOString()
+              };
+            }
+            return story;
+          });
+          
+          setStories(storiesWithValidDates);
+        } catch (error) {
+          console.error("Error loading stories:", error);
+        }
       }
-    }
+    };
+    
+    loadAdminStories();
   }, [navigate, toast]);
 
   // Save stories to localStorage whenever they change
   useEffect(() => {
     if (stories.length > 0) {
-      console.log(`Saving ${stories.length} admin stories to localStorage`);
-      localStorage.setItem("adminStories", JSON.stringify(stories));
+      // Make sure all stories have valid dates before saving
+      const sanitizedStories = stories.map(story => {
+        if (!story.publishedAt || isNaN(new Date(story.publishedAt).getTime())) {
+          return {
+            ...story,
+            publishedAt: new Date().toISOString()
+          };
+        }
+        return story;
+      });
+      
+      console.log(`Saving ${sanitizedStories.length} admin stories to localStorage`);
+      localStorage.setItem("adminStories", JSON.stringify(sanitizedStories));
       
       // Display success toast when stories are saved
       toast({
         title: "Stories Saved",
-        description: `Successfully saved ${stories.length} stories to local storage`,
+        description: `Successfully saved ${sanitizedStories.length} stories to local storage`,
       });
+      
+      // Log the saved stories for debugging
+      console.log('Saved admin stories:', 
+        sanitizedStories.map(story => ({
+          id: story.id,
+          title: story.title,
+          date: new Date(story.publishedAt).toLocaleString(),
+          category: story.category
+        }))
+      );
     }
   }, [stories, toast]);
 

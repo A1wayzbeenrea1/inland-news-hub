@@ -1,3 +1,4 @@
+
 import { fetchLatestNews } from '@/services/newsApiService';
 
 export interface Article {
@@ -220,6 +221,13 @@ const getAdminStories = (): Article[] => {
       // Ensure all admin stories have valid dates
       const storiesWithValidDates = ensureValidDates(parsedStories);
       
+      // For debugging
+      console.log("Admin stories dates:", storiesWithValidDates.map(story => ({
+        title: story.title,
+        date: new Date(story.publishedAt).toLocaleString(),
+        source: "Admin"
+      })));
+      
       return storiesWithValidDates;
     }
   } catch (error) {
@@ -309,7 +317,8 @@ export const getMostRecentArticles = async (limit: number = 10): Promise<Article
   // Log the sorted dates for debugging
   console.log('Sorted articles dates:', sortedArticles.map(article => ({
     title: article.title,
-    date: new Date(article.publishedAt).toISOString()
+    date: new Date(article.publishedAt).toISOString(),
+    source: adminStories.some(a => a.id === article.id) ? "Admin" : "Regular"
   })));
   
   console.log(`getMostRecentArticles: Returning ${sortedArticles.length} articles`);

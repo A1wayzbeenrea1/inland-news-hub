@@ -102,6 +102,7 @@ export function AdminStoryEditor({ story, onCancel, onSave }: AdminStoryEditorPr
     setIsSubmitting(true);
     
     // Prepare the story object
+    const currentDate = new Date().toISOString();
     const savedStory: Article = {
       id: story?.id || `story-${Date.now()}`,
       title: data.title,
@@ -112,9 +113,11 @@ export function AdminStoryEditor({ story, onCancel, onSave }: AdminStoryEditorPr
       featured: data.featured,
       image: imagePreview || "https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=1170&auto=format&fit=crop",
       author: story?.author || "Admin User",
-      publishedAt: story?.publishedAt || new Date().toISOString(),
+      publishedAt: story?.publishedAt || currentDate,
       tags: story?.tags || [data.category, "News", "Inland Empire"]
     };
+    
+    console.log(`Saving story with date: ${savedStory.publishedAt}`);
     
     setTimeout(() => {
       toast({

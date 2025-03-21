@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { AdBanner } from '@/components/layout/AdBanner';
@@ -11,6 +10,7 @@ import { EventsCalendar } from '@/components/news/EventsCalendar';
 import { getFeaturedArticles, getArticlesByCategory, getRecentArticles, getMostRecentArticles, Article, getApiArticles } from '@/data/mockData';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
   // State for async loaded data
@@ -18,6 +18,7 @@ const Index = () => {
   const [mostRecentArticles, setMostRecentArticles] = useState<Article[]>([]);
   const [latestArticles, setLatestArticles] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
   
   // Synchronous article data
   const publicSafetyArticles = getArticlesByCategory('Public Safety');
@@ -35,15 +36,33 @@ const Index = () => {
         // Force a fresh fetch of API articles
         await getApiArticles(true);
         
+        // Check if admin stories exist and log them
+        const adminStories = localStorage.getItem("adminStories");
+        if (adminStories) {
+          const parsedStories = JSON.parse(adminStories);
+          console.log(`Homepage loaded ${parsedStories.length} admin stories`);
+        } else {
+          console.log('No admin stories found on homepage load');
+        }
+        
+        // Load data with prioritizing admin stories
         const [featured, recent, latest] = await Promise.all([
           getFeaturedArticles(),
           getMostRecentArticles(6),
           getMostRecentArticles(5) // Get latest articles specifically for sidebar
         ]);
         
+        console.log('Most recent articles on homepage:', recent.map(a => ({ title: a.title, date: a.publishedAt })));
+        
         setFeaturedArticles(featured);
         setMostRecentArticles(recent);
         setLatestArticles(latest);
+        
+        toast({
+          title: "Content Loaded",
+          description: "Latest news stories have been updated",
+          duration: 3000,
+        });
       } catch (error) {
         console.error('Error loading articles:', error);
         // Fallback to mock data if API fails
@@ -63,7 +82,7 @@ const Index = () => {
     }, 15 * 60 * 1000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [toast]);
 
   return (
     <Layout>
