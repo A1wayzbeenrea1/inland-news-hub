@@ -8,7 +8,7 @@ import { CategoryHeader } from '@/components/news/CategoryHeader';
 import { WeatherWidget } from '@/components/news/WeatherWidget';
 import { NewsletterSignup } from '@/components/news/NewsletterSignup';
 import { EventsCalendar } from '@/components/news/EventsCalendar';
-import { getFeaturedArticles, getArticlesByCategory, getRecentArticles, getMostRecentArticles, Article } from '@/data/mockData';
+import { getFeaturedArticles, getArticlesByCategory, getRecentArticles, getMostRecentArticles, Article, getApiArticles } from '@/data/mockData';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
 
@@ -16,6 +16,7 @@ const Index = () => {
   // State for async loaded data
   const [featuredArticles, setFeaturedArticles] = useState<Article[]>([]);
   const [mostRecentArticles, setMostRecentArticles] = useState<Article[]>([]);
+  const [latestArticles, setLatestArticles] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   // Synchronous article data
@@ -25,24 +26,29 @@ const Index = () => {
   const educationArticles = getArticlesByCategory('Education');
   const healthArticles = getArticlesByCategory('Health');
   const environmentArticles = getArticlesByCategory('Environment');
-  const latestArticles = getRecentArticles(5);
 
   // Load async data on component mount
   useEffect(() => {
     const loadAsyncData = async () => {
       setIsLoading(true);
       try {
-        const [featured, recent] = await Promise.all([
+        // Force a fresh fetch of API articles
+        await getApiArticles(true);
+        
+        const [featured, recent, latest] = await Promise.all([
           getFeaturedArticles(),
-          getMostRecentArticles(6)
+          getMostRecentArticles(6),
+          getMostRecentArticles(5) // Get latest articles specifically for sidebar
         ]);
         
         setFeaturedArticles(featured);
         setMostRecentArticles(recent);
+        setLatestArticles(latest);
       } catch (error) {
         console.error('Error loading articles:', error);
         // Fallback to mock data if API fails
         setFeaturedArticles(getFeaturedArticles() as unknown as Article[]);
+        setLatestArticles(getRecentArticles(5));
       } finally {
         setIsLoading(false);
       }

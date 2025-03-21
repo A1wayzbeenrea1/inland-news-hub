@@ -48,13 +48,13 @@ interface NewsApiArticle {
   content: string;
 }
 
-export const fetchLatestNews = async (): Promise<Article[]> => {
+export const fetchLatestNews = async (pageSize = 10): Promise<Article[]> => {
   try {
     // Create a query that includes Inland Empire locations
     const locationQuery = INLAND_EMPIRE_LOCATIONS.join(" OR ");
     
     const response = await fetch(
-      `${NEWS_API_BASE_URL}/everything?q=${encodeURIComponent(locationQuery)}&sortBy=publishedAt&pageSize=10&language=en&apiKey=${NEWS_API_KEY}`
+      `${NEWS_API_BASE_URL}/everything?q=${encodeURIComponent(locationQuery)}&sortBy=publishedAt&pageSize=${pageSize}&language=en&apiKey=${NEWS_API_KEY}`
     );
     
     if (!response.ok) {

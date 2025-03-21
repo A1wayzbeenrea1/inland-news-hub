@@ -1,3 +1,4 @@
+
 import { fetchLatestNews } from '@/services/newsApiService';
 
 export interface Article {
@@ -192,16 +193,17 @@ export const articles: Article[] = [
 // Cache for API fetched articles
 let apiArticles: Article[] = [];
 let lastFetchTime: number = 0;
-const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+const CACHE_DURATION = 15 * 60 * 1000; // Reduced to 15 minutes for more frequent updates
 
 // Function to get articles from API and refresh cache if needed
-export const getApiArticles = async (): Promise<Article[]> => {
+export const getApiArticles = async (forceFresh = false): Promise<Article[]> => {
   const now = Date.now();
   
-  // Check if cache is stale
-  if (apiArticles.length === 0 || now - lastFetchTime > CACHE_DURATION) {
+  // Check if cache is stale or a fresh fetch is requested
+  if (forceFresh || apiArticles.length === 0 || now - lastFetchTime > CACHE_DURATION) {
     try {
-      const newArticles = await fetchLatestNews();
+      console.log("Fetching fresh news data at", new Date().toLocaleTimeString());
+      const newArticles = await fetchLatestNews(20); // Increased to 20 articles for more variety
       if (newArticles && newArticles.length > 0) {
         apiArticles = newArticles;
         lastFetchTime = now;
@@ -254,18 +256,20 @@ export const getMostRecentArticles = async (limit: number = 10): Promise<Article
 
 // Keep the original getRecentArticles for backward compatibility
 export const getRecentArticles = (limit: number = 5): Article[] => {
-  return [...articles]
+  const allArticles = [...apiArticles, ...articles];
+  
+  return allArticles
     .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
     .slice(0, limit);
 };
 
 export const getArticleBySlug = (slug: string): Article | undefined => {
-  // Check mock articles first
-  const mockArticle = articles.find(article => article.slug === slug);
-  if (mockArticle) return mockArticle;
+  // Check API articles first for newest content
+  const apiArticle = apiArticles.find(article => article.slug === slug);
+  if (apiArticle) return apiArticle;
   
-  // Then check API articles
-  return apiArticles.find(article => article.slug === slug);
+  // Then check mock articles
+  return articles.find(article => article.slug === slug);
 };
 
 export const getRelatedArticles = (slug: string, limit: number = 3): Article[] => {
