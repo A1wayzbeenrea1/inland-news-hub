@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { getArticlesByCategory, getRecentArticles } from '@/data/mockData';
 import { Button } from '@/components/ui/button';
 import { ChevronRight } from 'lucide-react';
+import { Article } from '@/types/article';
 
 const CategoryPage = () => {
   const { category } = useParams<{ category: string }>();
@@ -18,13 +19,48 @@ const CategoryPage = () => {
     ? category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
     : '';
   
-  const articles = getArticlesByCategory(formattedCategory);
-  const latestArticles = getRecentArticles(5);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [latestArticles, setLatestArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
-  }, [category]);
+    
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [articleData, latestArticleData] = await Promise.all([
+          getArticlesByCategory(formattedCategory),
+          getRecentArticles(5)
+        ]);
+        
+        setArticles(articleData);
+        setLatestArticles(latestArticleData);
+      } catch (error) {
+        console.error("Error fetching category data:", error);
+        // Set empty arrays to prevent errors
+        setArticles([]);
+        setLatestArticles([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [category, formattedCategory]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-gray-50">
+        <Header />
+        <main className="flex-grow flex items-center justify-center">
+          <div className="animate-spin h-10 w-10 border-4 border-news-primary border-t-transparent rounded-full"></div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">

@@ -12,6 +12,7 @@ import { MetaTags } from '@/components/common/MetaTags';
 import { getRecentArticles } from '@/data/mockData';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { Article } from '@/types/article';
 
 // Mock community-specific articles - in a real app, this would come from an API
 const communityArticles = {
@@ -161,28 +162,42 @@ const CommunityPage = () => {
   const communityKey = community || '';
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [latestArticles, setLatestArticles] = useState<Article[]>([]);
   
   // Add safety checks to prevent errors
   const info = communityInfo[communityKey as keyof typeof communityInfo];
   const articles = communityKey ? communityArticles[communityKey as keyof typeof communityArticles] || [] : [];
-  const latestArticles = getRecentArticles(5).filter(article => {
-    // Make sure we don't include duplicates
-    if (!articles || !Array.isArray(articles)) return true;
-    return !articles.some(a => a.id === article.id);
-  });
   
   useEffect(() => {
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
     
-    // Simulate loading
+    // Simulate loading and fetch latest articles
     setLoading(true);
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 500);
     
-    return () => clearTimeout(timer);
-  }, [community, info]);
+    const fetchLatestArticles = async () => {
+      try {
+        const recentArticles = await getRecentArticles(5);
+        // Make sure we don't include duplicates
+        const filteredArticles = recentArticles.filter(article => {
+          if (!articles || !Array.isArray(articles)) return true;
+          return !articles.some(a => a.id === article.id);
+        });
+        
+        setLatestArticles(filteredArticles);
+      } catch (error) {
+        console.error("Error fetching latest articles:", error);
+        setLatestArticles([]);
+      } finally {
+        // Finish loading after a short delay
+        setTimeout(() => {
+          setLoading(false);
+        }, 500);
+      }
+    };
+    
+    fetchLatestArticles();
+  }, [community, info, articles]);
 
   if (loading) {
     return (

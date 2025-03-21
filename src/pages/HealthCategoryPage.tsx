@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { AdBanner } from '@/components/layout/AdBanner';
@@ -10,16 +10,49 @@ import { CategoryHeader } from '@/components/news/CategoryHeader';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { getArticlesByCategory, getRecentArticles } from '@/data/mockData';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Article } from '@/types/article';
 
 const HealthCategoryPage = () => {
   const category = "Health";
-  const articles = getArticlesByCategory(category);
-  const latestArticles = getRecentArticles(5);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [latestArticles, setLatestArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
+    
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [articleData, latestArticleData] = await Promise.all([
+          getArticlesByCategory(category),
+          getRecentArticles(5)
+        ]);
+        
+        setArticles(articleData);
+        setLatestArticles(latestArticleData);
+      } catch (error) {
+        console.error("Error fetching health category data:", error);
+        setArticles([]);
+        setLatestArticles([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
   }, []);
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex justify-center items-center py-24">
+          <div className="animate-spin h-10 w-10 border-4 border-news-primary border-t-transparent rounded-full"></div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>

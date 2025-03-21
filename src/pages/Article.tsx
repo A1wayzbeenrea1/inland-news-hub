@@ -38,6 +38,7 @@ const Article = () => {
   const navigate = useNavigate();
   const [article, setArticle] = useState<ArticleType | null>(null);
   const [relatedArticles, setRelatedArticles] = useState<ArticleType[]>([]);
+  const [categoryArticles, setCategoryArticles] = useState<ArticleType[]>([]);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
   
@@ -54,63 +55,85 @@ const Article = () => {
       
       console.log("Looking for article with slug:", slug);
       
-      // First try to get from regular articles
-      let foundArticle = getArticleBySlug(slug);
-      
-      // If not found, check localStorage for admin stories
-      if (!foundArticle) {
-        try {
-          const adminStories = localStorage.getItem("adminStories");
-          if (adminStories) {
-            const stories = JSON.parse(adminStories);
-            console.log("Admin stories:", stories);
-            
-            // Find story by matching slug
-            const adminStory = stories.find((story: AdminStory) => {
-              // Safely generate a comparison slug if title exists
-              const storySlug = story.slug || 
-                (story.title ? story.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') : '');
+      try {
+        // First try to get from API articles
+        const foundArticle = await getArticleBySlug(slug);
+        
+        // If not found, check localStorage for admin stories
+        if (!foundArticle) {
+          try {
+            const adminStories = localStorage.getItem("adminStories");
+            if (adminStories) {
+              const stories = JSON.parse(adminStories);
+              console.log("Admin stories:", stories);
               
-              return storySlug === slug;
-            });
-            
-            if (adminStory) {
-              console.log("Found admin story in localStorage:", adminStory.title);
+              // Find story by matching slug
+              const adminStory = stories.find((story: AdminStory) => {
+                // Safely generate a comparison slug if title exists
+                const storySlug = story.slug || 
+                  (story.title ? story.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') : '');
+                
+                return storySlug === slug;
+              });
               
-              // Convert admin story to ArticleType format
-              foundArticle = {
-                id: adminStory.id || `admin-${Date.now()}`,
-                title: adminStory.title || "Untitled",
-                excerpt: adminStory.excerpt || (adminStory.content ? adminStory.content.substring(0, 150) : "No excerpt available"),
-                content: adminStory.content || "<p>No content available</p>",
-                image: adminStory.image || "/placeholder.svg",
-                category: adminStory.category || "News",
-                author: adminStory.author || "Admin",
-                publishedAt: adminStory.date || new Date().toISOString(),
-                slug: slug,
-                source: adminStory.source || "Admin",
-                tags: []
-              };
+              if (adminStory) {
+                console.log("Found admin story in localStorage:", adminStory.title);
+                
+                // Convert admin story to ArticleType format
+                const articleFromAdmin: ArticleType = {
+                  id: adminStory.id || `admin-${Date.now()}`,
+                  title: adminStory.title || "Untitled",
+                  excerpt: adminStory.excerpt || (adminStory.content ? adminStory.content.substring(0, 150) : "No excerpt available"),
+                  content: adminStory.content || "<p>No content available</p>",
+                  image: adminStory.image || "/placeholder.svg",
+                  category: adminStory.category || "News",
+                  author: adminStory.author || "Admin",
+                  publishedAt: adminStory.date || new Date().toISOString(),
+                  slug: slug,
+                  source: adminStory.source || "Admin",
+                  tags: []
+                };
+                
+                setArticle(articleFromAdmin);
+                // Get related articles based on the category
+                if (articleFromAdmin.category) {
+                  const related = await getRelatedArticles(slug, 3);
+                  setRelatedArticles(related);
+                  
+                  const categoryResults = await getArticlesByCategory(articleFromAdmin.category);
+                  setCategoryArticles(categoryResults);
+                }
+                setLoading(false);
+                return;
+              }
             }
+          } catch (error) {
+            console.error("Error parsing admin stories:", error);
           }
-        } catch (error) {
-          console.error("Error parsing admin stories:", error);
+          
+          console.error("Article not found with slug:", slug);
+          navigate('/not-found');
+          return;
         }
-      }
-      
-      if (foundArticle) {
+        
         setArticle(foundArticle);
+        
         // Get related articles based on the category
         if (foundArticle.category) {
-          const related = getRelatedArticles(slug, 3);
+          const [related, categoryResults] = await Promise.all([
+            getRelatedArticles(slug, 3),
+            getArticlesByCategory(foundArticle.category)
+          ]);
+          
           setRelatedArticles(related);
+          setCategoryArticles(categoryResults);
         }
-      } else {
-        console.error("Article not found with slug:", slug);
+      } catch (error) {
+        console.error("Error loading article:", error);
         navigate('/not-found');
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
     
     loadArticle();
@@ -403,14 +426,14 @@ const Article = () => {
             <div className="space-y-8">
               <AdBanner size="small" />
               
-              {article.category && (
+              {article.category && categoryArticles.length > 0 && (
                 <div>
                   <h2 className="text-xl font-bold mb-4">More from {article.category}</h2>
                   <div className="space-y-4">
-                    {getArticlesByCategory(article.category).slice(0, 5).map((article) => (
+                    {categoryArticles.slice(0, 5).map((categoryArticle) => (
                       <ArticleCard 
-                        key={article.id} 
-                        article={article} 
+                        key={categoryArticle.id} 
+                        article={categoryArticle} 
                         variant="minimal"
                       />
                     ))}
