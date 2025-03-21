@@ -29,13 +29,26 @@ const Index = () => {
         const forceRefresh = localStorage.getItem("forceRefresh");
         const shouldForceRefresh = forceRefresh && (Date.now() - parseInt(forceRefresh)) < 10000;
         
-        const [featuredArticlesData, publicSafetyArticles, educationArticles, politicsArticles, businessArticles] = await Promise.all([
-          getFeaturedArticles().catch(err => { console.error("Error fetching featured articles:", err); return []; }),
-          getArticlesByCategory('Public Safety').catch(err => { console.error("Error fetching Public Safety articles:", err); return []; }),
-          getArticlesByCategory('Education').catch(err => { console.error("Error fetching Education articles:", err); return []; }),
-          getArticlesByCategory('Politics').catch(err => { console.error("Error fetching Politics articles:", err); return []; }),
-          getArticlesByCategory('Business').catch(err => { console.error("Error fetching Business articles:", err); return []; })
-        ]);
+        // Fix: The function calls return Promises, not arrays with a catch method
+        // We need to handle errors properly within the Promise.all error handler
+        const results = await Promise.all([
+          getFeaturedArticles(),
+          getArticlesByCategory('Public Safety'),
+          getArticlesByCategory('Education'),
+          getArticlesByCategory('Politics'),
+          getArticlesByCategory('Business')
+        ]).catch(err => {
+          console.error("Error fetching articles:", err);
+          return [[], [], [], [], []];
+        });
+        
+        const [
+          featuredArticlesData,
+          publicSafetyArticles,
+          educationArticles,
+          politicsArticles,
+          businessArticles
+        ] = results;
         
         const adminStories = localStorage.getItem("adminStories");
         if (adminStories) {
