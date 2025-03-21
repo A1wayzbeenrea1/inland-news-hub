@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Image, Save, X } from "lucide-react";
+import { Article } from "@/data/mockData";
 
 const storySchema = z.object({
   title: z.string().min(5, {
@@ -49,14 +50,14 @@ const storySchema = z.object({
 type StoryFormValues = z.infer<typeof storySchema>;
 
 interface AdminStoryEditorProps {
-  story?: any | null;
+  story?: Article | null;
   onCancel: () => void;
-  onSave: () => void;
+  onSave: (story: Article) => void;
 }
 
 export function AdminStoryEditor({ story, onCancel, onSave }: AdminStoryEditorProps) {
   const { toast } = useToast();
-  const [imagePreview, setImagePreview] = useState<string | null>(story?.imageUrl || null);
+  const [imagePreview, setImagePreview] = useState<string | null>(story?.image || null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Initialize form with existing story data or defaults
@@ -100,17 +101,29 @@ export function AdminStoryEditor({ story, onCancel, onSave }: AdminStoryEditorPr
   const onSubmit = (data: StoryFormValues) => {
     setIsSubmitting(true);
     
-    // Simulate API call to save the story
+    // Prepare the story object
+    const savedStory: Article = {
+      id: story?.id || `story-${Date.now()}`,
+      title: data.title,
+      slug: data.slug,
+      content: data.content,
+      category: data.category,
+      excerpt: data.excerpt,
+      featured: data.featured,
+      image: imagePreview || "https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=1170&auto=format&fit=crop",
+      author: story?.author || "Admin User",
+      publishedAt: story?.publishedAt || new Date().toISOString(),
+      tags: story?.tags || [data.category, "News", "Inland Empire"]
+    };
+    
     setTimeout(() => {
-      console.log("Saving story:", { ...data, imageUrl: imagePreview });
-      
       toast({
         title: story ? "Story updated" : "Story created",
         description: `"${data.title}" has been successfully ${story ? "updated" : "saved"}.`,
       });
       
       setIsSubmitting(false);
-      onSave();
+      onSave(savedStory);
     }, 1000);
   };
 
@@ -177,12 +190,15 @@ export function AdminStoryEditor({ story, onCancel, onSave }: AdminStoryEditorPr
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="local">Local News</SelectItem>
-                          <SelectItem value="business">Business</SelectItem>
-                          <SelectItem value="sports">Sports</SelectItem>
-                          <SelectItem value="politics">Politics</SelectItem>
-                          <SelectItem value="technology">Technology</SelectItem>
-                          <SelectItem value="entertainment">Entertainment</SelectItem>
+                          <SelectItem value="Public Safety">Public Safety</SelectItem>
+                          <SelectItem value="Politics">Politics</SelectItem>
+                          <SelectItem value="Business">Business</SelectItem>
+                          <SelectItem value="Education">Education</SelectItem>
+                          <SelectItem value="Health">Health</SelectItem>
+                          <SelectItem value="Environment">Environment</SelectItem>
+                          <SelectItem value="Community">Community</SelectItem>
+                          <SelectItem value="Sports">Sports</SelectItem>
+                          <SelectItem value="Entertainment">Entertainment</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

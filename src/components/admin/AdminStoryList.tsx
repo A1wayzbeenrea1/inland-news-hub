@@ -1,273 +1,257 @@
-
 import { useState } from "react";
 import { 
-  Table, 
-  TableBody, 
-  TableCaption, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { 
-  MoreHorizontal, 
-  Search, 
   Edit, 
-  Trash, 
-  Eye,
-  CheckCircle,
-  XCircle
+  Trash2, 
+  Search, 
+  Star, 
+  StarOff,
+  ChevronDown,
+  ChevronUp,
+  Filter
 } from "lucide-react";
-
-// Sample mock data - in a real app this would come from an API
-const mockStories = [
-  {
-    id: "1",
-    title: "Redlands City Council Approves Downtown Development Plan",
-    slug: "redlands-city-council-approves-downtown-development-plan",
-    status: "published",
-    category: "local",
-    publishDate: "2023-10-15",
-    featured: true,
-    seoScore: 87,
-  },
-  {
-    id: "2",
-    title: "Local Business Owner Receives Community Leadership Award",
-    slug: "local-business-owner-receives-award",
-    status: "published",
-    category: "business",
-    publishDate: "2023-10-12",
-    featured: false,
-    seoScore: 75,
-  },
-  {
-    id: "3",
-    title: "School District Announces New Educational Initiative",
-    slug: "school-district-announces-new-initiative",
-    status: "draft",
-    category: "education",
-    publishDate: null,
-    featured: false,
-    seoScore: 62,
-  },
-  {
-    id: "4",
-    title: "Annual Fall Festival Returns With New Attractions",
-    slug: "annual-fall-festival-returns",
-    status: "published",
-    category: "entertainment",
-    publishDate: "2023-09-28",
-    featured: true,
-    seoScore: 91,
-  },
-  {
-    id: "5",
-    title: "City Budget Proposal Raises Questions Among Residents",
-    slug: "city-budget-proposal-raises-questions",
-    status: "review",
-    category: "politics",
-    publishDate: null,
-    featured: false,
-    seoScore: 68,
-  },
-];
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Article } from "@/data/mockData";
 
 interface AdminStoryListProps {
-  onEdit: (story: any) => void;
+  onEdit: (story: Article) => void;
+  stories?: Article[];
 }
 
-export function AdminStoryList({ onEdit }: AdminStoryListProps) {
-  const { toast } = useToast();
-  const [stories, setStories] = useState(mockStories);
+export function AdminStoryList({ onEdit, stories = [] }: AdminStoryListProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [storyToDelete, setStoryToDelete] = useState<any>(null);
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [sortField, setSortField] = useState<"title" | "publishedAt">("publishedAt");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
-  // Filter stories based on search term
-  const filteredStories = stories.filter(story => 
-    story.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    story.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // If no stories provided, use mock data (keeping the original component behavior)
+  const allStories = stories.length > 0 
+    ? stories 
+    : [
+        {
+          id: "1",
+          title: "Redlands Community Hospital Expands Emergency Department",
+          excerpt: "The expansion adds 15 new treatment rooms and state-of-the-art equipment.",
+          content: "Lorem ipsum dolor sit amet...",
+          image: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?q=80&w=2053&auto=format&fit=crop",
+          category: "Health",
+          author: "Jane Smith",
+          publishedAt: "2023-05-15T14:30:00Z",
+          slug: "redlands-hospital-expansion",
+          featured: true,
+          tags: ["Health", "Infrastructure", "Redlands"]
+        },
+        {
+          id: "2",
+          title: "City Council Approves New Downtown Development Plan",
+          excerpt: "The $25 million project will include mixed-use spaces and a public plaza.",
+          content: "Lorem ipsum dolor sit amet...",
+          image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=2070&auto=format&fit=crop",
+          category: "Politics",
+          author: "John Doe",
+          publishedAt: "2023-05-10T09:15:00Z",
+          slug: "downtown-development-plan",
+          featured: false,
+          tags: ["Politics", "Development", "Economy"]
+        },
+        {
+          id: "3",
+          title: "Local High School Wins State Championship",
+          excerpt: "The Wildcats defeated their rivals 28-21 in a thrilling overtime finish.",
+          content: "Lorem ipsum dolor sit amet...",
+          image: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?q=80&w=2070&auto=format&fit=crop",
+          category: "Education",
+          author: "Sarah Johnson",
+          publishedAt: "2023-05-08T18:45:00Z",
+          slug: "high-school-championship",
+          featured: true,
+          tags: ["Education", "Sports", "Youth"]
+        },
+      ];
 
-  // Handle story deletion
-  const handleDeleteStory = () => {
-    if (!storyToDelete) return;
+  // Filter stories based on search term and category
+  const filteredStories = allStories.filter(story => {
+    const matchesSearch = 
+      story.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      story.excerpt.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // Filter out the story to delete
-    const updatedStories = stories.filter(story => story.id !== storyToDelete.id);
-    setStories(updatedStories);
+    const matchesCategory = categoryFilter === "all" || story.category === categoryFilter;
     
-    toast({
-      title: "Story deleted",
-      description: `"${storyToDelete.title}" has been deleted.`,
-    });
-    
-    setDeleteDialogOpen(false);
-    setStoryToDelete(null);
+    return matchesSearch && matchesCategory;
+  });
+
+  // Get unique categories for the filter dropdown
+  const categories = ["all", ...new Set(allStories.map(story => story.category))];
+
+  // Sort stories
+  const sortedStories = [...filteredStories].sort((a, b) => {
+    if (sortField === "title") {
+      return sortDirection === "asc" 
+        ? a.title.localeCompare(b.title)
+        : b.title.localeCompare(a.title);
+    } else {
+      return sortDirection === "asc"
+        ? new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime()
+        : new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
+    }
+  });
+
+  const toggleSort = (field: "title" | "publishedAt") => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("desc");
+    }
   };
 
-  // Handle story status change
-  const handleStatusChange = (story: any, newStatus: "published" | "draft" | "review") => {
-    const updatedStories = stories.map(s => 
-      s.id === story.id ? { ...s, status: newStatus } : s
-    );
-    
-    setStories(updatedStories);
-    
-    toast({
-      title: "Status updated",
-      description: `"${story.title}" is now ${newStatus}.`,
-    });
+  const getSortIcon = (field: "title" | "publishedAt") => {
+    if (sortField !== field) return null;
+    return sortDirection === "asc" ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />;
   };
 
-  // Handle featured toggle
-  const handleFeaturedToggle = (story: any) => {
-    const updatedStories = stories.map(s => 
-      s.id === story.id ? { ...s, featured: !s.featured } : s
-    );
-    
-    setStories(updatedStories);
-    
-    toast({
-      title: story.featured ? "Removed from featured" : "Added to featured",
-      description: `"${story.title}" ${story.featured ? "removed from" : "added to"} featured stories.`,
-    });
+  // Placeholder for actions that would be fully implemented in a real app
+  const handleToggleFeatured = (id: string) => {
+    console.log("Toggle featured for story ID:", id);
+  };
+
+  const handleDelete = (id: string) => {
+    console.log("Delete story ID:", id);
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center">
-        <div className="relative flex-1">
+      <div className="flex flex-col sm:flex-row gap-4 justify-between">
+        <div className="relative w-full sm:w-64">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search stories by title or category..."
-            className="pl-8"
+            placeholder="Search stories..."
+            className="pl-8 w-full"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+        </div>
+        
+        <div className="flex gap-2">
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-[180px]">
+              <div className="flex">
+                <Filter className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Filter by category" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map(cat => (
+                <SelectItem key={cat} value={cat}>
+                  {cat === "all" ? "All Categories" : cat}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
       
       <div className="rounded-md border">
         <Table>
-          <TableCaption>List of all stories</TableCaption>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[350px]">Title</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Featured</TableHead>
-              <TableHead>SEO Score</TableHead>
+              <TableHead className="w-[50px]">ID</TableHead>
+              <TableHead className="cursor-pointer" onClick={() => toggleSort("title")}>
+                <div className="flex items-center">
+                  Title
+                  {getSortIcon("title")}
+                </div>
+              </TableHead>
+              <TableHead className="hidden md:table-cell">Category</TableHead>
+              <TableHead className="hidden md:table-cell cursor-pointer" onClick={() => toggleSort("publishedAt")}>
+                <div className="flex items-center">
+                  Published
+                  {getSortIcon("publishedAt")}
+                </div>
+              </TableHead>
+              <TableHead className="hidden md:table-cell">Featured</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredStories.length === 0 ? (
+            {sortedStories.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  No stories found
+                  No stories found. Try changing your filters or create a new story.
                 </TableCell>
               </TableRow>
             ) : (
-              filteredStories.map((story) => (
+              sortedStories.map((story) => (
                 <TableRow key={story.id}>
-                  <TableCell className="font-medium">{story.title}</TableCell>
-                  <TableCell className="capitalize">{story.category}</TableCell>
+                  <TableCell className="font-medium">{story.id.substring(0, 4)}</TableCell>
                   <TableCell>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      story.status === "published" ? "bg-green-100 text-green-800" :
-                      story.status === "draft" ? "bg-gray-100 text-gray-800" :
-                      "bg-yellow-100 text-yellow-800"
-                    }`}>
-                      {story.status}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    {story.featured ? (
-                      <CheckCircle className="h-5 w-5 text-green-500" />
-                    ) : (
-                      <XCircle className="h-5 w-5 text-gray-300" />
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      <div className={`w-full h-2 rounded-full ${
-                        story.seoScore >= 80 ? "bg-green-100" :
-                        story.seoScore >= 60 ? "bg-yellow-100" :
-                        "bg-red-100"
-                      }`}>
-                        <div 
-                          className={`h-2 rounded-full ${
-                            story.seoScore >= 80 ? "bg-green-500" :
-                            story.seoScore >= 60 ? "bg-yellow-500" :
-                            "bg-red-500"
-                          }`}
-                          style={{ width: `${story.seoScore}%` }}
-                        />
+                    <div>
+                      <div className="font-medium">{story.title}</div>
+                      <div className="text-sm text-muted-foreground hidden md:block">
+                        {story.excerpt.substring(0, 60)}...
                       </div>
-                      <span className="ml-2 text-sm">{story.seoScore}</span>
                     </div>
                   </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                      {story.category}
+                    </span>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {new Date(story.publishedAt).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {story.featured ? (
+                      <Star className="h-5 w-5 text-yellow-500" />
+                    ) : (
+                      <StarOff className="h-5 w-5 text-muted-foreground" />
+                    )}
+                  </TableCell>
                   <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Open menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => onEdit(story)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => window.open(`/article/${story.slug}`, "_blank")}>
-                          <Eye className="mr-2 h-4 w-4" />
-                          View
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => handleFeaturedToggle(story)}>
-                          {story.featured ? (
-                            <>Remove from featured</>
-                          ) : (
-                            <>Add to featured</>
-                          )}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          onClick={() => {
-                            setStoryToDelete(story);
-                            setDeleteDialogOpen(true);
-                          }}
-                          className="text-red-600"
-                        >
-                          <Trash className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleToggleFeatured(story.id)}
+                        title={story.featured ? "Remove from featured" : "Add to featured"}
+                      >
+                        {story.featured ? (
+                          <StarOff className="h-4 w-4" />
+                        ) : (
+                          <Star className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => onEdit(story)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleDelete(story.id)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -275,26 +259,6 @@ export function AdminStoryList({ onEdit }: AdminStoryListProps) {
           </TableBody>
         </Table>
       </div>
-      
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Are you sure?</DialogTitle>
-            <DialogDescription>
-              This will permanently delete the story. This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteStory}>
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

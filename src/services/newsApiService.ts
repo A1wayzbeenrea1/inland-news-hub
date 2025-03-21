@@ -48,40 +48,72 @@ interface NewsApiArticle {
   content: string;
 }
 
-export const fetchLatestNews = async (pageSize = 10): Promise<Article[]> => {
+export const fetchLatestNews = async (pageSize = 20): Promise<Article[]> => {
   try {
+    // First, check if we have any user-added stories in localStorage
+    const savedStories = localStorage.getItem("adminStories");
+    let userStories: Article[] = [];
+    
+    if (savedStories) {
+      try {
+        userStories = JSON.parse(savedStories);
+        console.log("Found user-added stories:", userStories.length);
+      } catch (error) {
+        console.error("Error parsing user stories:", error);
+      }
+    }
+    
     // Create a query that includes Inland Empire locations
     const locationQuery = INLAND_EMPIRE_LOCATIONS.join(" OR ");
     
-    const response = await fetch(
-      `${NEWS_API_BASE_URL}/everything?q=${encodeURIComponent(locationQuery)}&sortBy=publishedAt&pageSize=${pageSize}&language=en&apiKey=${NEWS_API_KEY}`
-    );
-    
-    if (!response.ok) {
-      throw new Error(`News API Error: ${response.status}`);
-    }
-    
-    const data: NewsApiResponse = await response.json();
-    
-    // Transform the NewsAPI response into our Article format
-    return data.articles.map((article, index) => {
-      // Determine the most likely category based on keywords in the title/description
-      const category = determineCategoryFromContent(article.title + " " + article.description);
+    try {
+      // Try to fetch from News API
+      const response = await fetch(
+        `${NEWS_API_BASE_URL}/everything?q=${encodeURIComponent(locationQuery)}&sortBy=publishedAt&pageSize=${pageSize}&language=en&apiKey=${NEWS_API_KEY}`
+      );
       
-      return {
-        id: `api-${index}-${Date.now()}`,
-        title: article.title,
-        excerpt: article.description || "Read more about this story...",
-        content: article.content || article.description || "",
-        image: article.urlToImage || "https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=1170&auto=format&fit=crop",
-        category,
-        author: article.author || article.source.name || "Staff Reporter",
-        publishedAt: article.publishedAt,
-        slug: generateSlug(article.title),
-        featured: index < 3, // Make the first 3 articles featured
-        tags: [category, "News", "Inland Empire"]
-      };
-    });
+      if (!response.ok) {
+        throw new Error(`News API Error: ${response.status}`);
+      }
+      
+      const data: NewsApiResponse = await response.json();
+      
+      // Transform the NewsAPI response into our Article format
+      const apiArticles = data.articles.map((article, index) => {
+        // Determine the most likely category based on keywords in the title/description
+        const category = determineCategoryFromContent(article.title + " " + article.description);
+        
+        return {
+          id: `api-${index}-${Date.now()}`,
+          title: article.title,
+          excerpt: article.description || "Read more about this story...",
+          content: article.content || article.description || "",
+          image: article.urlToImage || "https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=1170&auto=format&fit=crop",
+          category,
+          author: article.author || article.source.name || "Staff Reporter",
+          publishedAt: article.publishedAt,
+          slug: generateSlug(article.title),
+          featured: index < 3, // Make the first 3 articles featured
+          tags: [category, "News", "Inland Empire"]
+        };
+      });
+      
+      // Combine user-added stories with API-fetched stories
+      // Sort by publish date to ensure newest stories appear first
+      return [...userStories, ...apiArticles].sort((a, b) => 
+        new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+      );
+    } catch (error) {
+      console.error("Error fetching from News API:", error);
+      
+      // If API fails, return user stories plus any mock data if needed
+      if (userStories.length > 0) {
+        return userStories;
+      }
+      
+      // If no user stories, throw the error to trigger mock data fallback
+      throw error;
+    }
   } catch (error) {
     console.error("Error fetching news:", error);
     return []; // Return empty array in case of error
@@ -89,7 +121,7 @@ export const fetchLatestNews = async (pageSize = 10): Promise<Article[]> => {
 };
 
 // Simple function to generate a slug from a title
-const generateSlug = (title: string): string => {
+export const generateSlug = (title: string): string => {
   return title
     .toLowerCase()
     .replace(/[^\w\s-]/g, '')
@@ -99,7 +131,7 @@ const generateSlug = (title: string): string => {
 };
 
 // Determine article category based on keywords in the content
-const determineCategoryFromContent = (content: string): string => {
+export const determineCategoryFromContent = (content: string): string => {
   const contentLower = content.toLowerCase();
   
   const categoryKeywords: Record<string, string[]> = {
