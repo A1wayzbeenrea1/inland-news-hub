@@ -114,8 +114,8 @@ export const Header = () => {
         <div className="container mx-auto flex justify-between items-center">
           <Link to="/" className="flex items-center">
             <div className="flex flex-col items-center">
-              <span className="text-2xl md:text-3xl font-serif font-bold text-news-primary">Inland Empire</span>
-              <span className="text-xl md:text-2xl font-serif text-news-secondary">News Hub</span>
+              <span className="text-2xl md:text-3xl font-serif font-bold text-news-primary">IE.TrueNews</span>
+              <span className="text-xl md:text-2xl font-serif text-news-secondary">Your Trusted Source</span>
             </div>
           </Link>
           {!isMobile && (
