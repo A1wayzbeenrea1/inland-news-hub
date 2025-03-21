@@ -13,13 +13,11 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           <div className="flex flex-col items-start">
             <Link to="/" className="flex flex-col items-start mb-4">
-              <div className="bg-white p-3 rounded-lg shadow-md mb-2">
-                <img 
-                  src="/lovable-uploads/97104a5b-83e2-4269-b309-9c33310d3385.png" 
-                  alt="INLAND EMPIRE TRUENEWS" 
-                  className="h-16 object-contain"
-                />
-              </div>
+              <img 
+                src="/lovable-uploads/97104a5b-83e2-4269-b309-9c33310d3385.png" 
+                alt="INLAND EMPIRE TRUENEWS" 
+                className="h-16 mb-2"
+              />
             </Link>
             <p className="text-sm text-gray-300 mb-4">
               Your trusted source for local news coverage in Yucaipa, Redlands, Rialto, Ontario and 

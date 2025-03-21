@@ -1,5 +1,4 @@
 
-import { useState, useEffect } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { AdBanner } from '@/components/layout/AdBanner';
 import { TopStories } from '@/components/news/TopStories';
@@ -8,14 +7,11 @@ import { CategoryHeader } from '@/components/news/CategoryHeader';
 import { WeatherWidget } from '@/components/news/WeatherWidget';
 import { NewsletterSignup } from '@/components/news/NewsletterSignup';
 import { EventsCalendar } from '@/components/news/EventsCalendar';
-import { MostRecentNews } from '@/components/news/MostRecentNews';
 import { getFeaturedArticles, getArticlesByCategory, getRecentArticles } from '@/data/mockData';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
 
 const Index = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  
   const featuredArticles = getFeaturedArticles();
   const publicSafetyArticles = getArticlesByCategory('Public Safety');
   const politicsArticles = getArticlesByCategory('Politics');
@@ -25,35 +21,11 @@ const Index = () => {
   const environmentArticles = getArticlesByCategory('Environment');
   const latestArticles = getRecentArticles(5);
 
-  useEffect(() => {
-    // Simulate loading delay for demonstration
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
     <Layout>
-      {/* Full-width Logo Cover */}
-      <div className="relative w-full bg-gradient-to-b from-news-dark/90 to-news-dark/80 py-12 mb-6">
-        <div className="container mx-auto flex justify-center items-center">
-          <img 
-            src="/lovable-uploads/97104a5b-83e2-4269-b309-9c33310d3385.png" 
-            alt="INLAND EMPIRE TRUENEWS" 
-            className="h-44 md:h-60 object-contain max-w-full animate-fade-in"
-            style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))' }}
-          />
-        </div>
-      </div>
-
       <div className="container px-4 py-8 mx-auto">
         {/* Featured Top Stories Slider */}
         <TopStories articles={featuredArticles} className="mb-8" />
-        
-        {/* Most Recent News Section - NEW */}
-        <MostRecentNews localArticles={latestArticles} className="mb-8" />
         
         {/* Ad Banner */}
         <AdBanner size="large" className="my-8" />

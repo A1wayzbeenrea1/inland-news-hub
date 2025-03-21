@@ -1,7 +1,8 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Layout } from '@/components/layout/Layout';
+import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
 import { AdBanner } from '@/components/layout/AdBanner';
 import { ArticleCard } from '@/components/news/ArticleCard';
 import { NewsletterSignup } from '@/components/news/NewsletterSignup';
@@ -10,7 +11,6 @@ import { Separator } from '@/components/ui/separator';
 import { getArticlesByCategory, getRecentArticles } from '@/data/mockData';
 import { Button } from '@/components/ui/button';
 import { ChevronRight } from 'lucide-react';
-import { fetchLatestNews, categorizeArticle } from '@/services/newsService';
 
 const CategoryPage = () => {
   const { category } = useParams<{ category: string }>();
@@ -18,42 +18,18 @@ const CategoryPage = () => {
     ? category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
     : '';
   
-  const [articles, setArticles] = useState(getArticlesByCategory(formattedCategory));
-  const [latestArticles, setLatestArticles] = useState(getRecentArticles(5));
-  const [isLoading, setIsLoading] = useState(true);
+  const articles = getArticlesByCategory(formattedCategory);
+  const latestArticles = getRecentArticles(5);
   
   useEffect(() => {
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
-    
-    // Fetch external articles and filter for this category
-    const fetchCategoryNews = async () => {
-      setIsLoading(true);
-      try {
-        const externalArticles = await fetchLatestNews();
-        const filteredExternal = externalArticles.filter(
-          article => categorizeArticle(article.title, article.excerpt) === formattedCategory
-        );
-        
-        // Combine with local articles
-        const localArticles = getArticlesByCategory(formattedCategory);
-        const combined = [...filteredExternal, ...localArticles]
-          .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
-        
-        setArticles(combined);
-      } catch (error) {
-        console.error('Error fetching category news:', error);
-        setArticles(getArticlesByCategory(formattedCategory));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchCategoryNews();
-  }, [category, formattedCategory]);
+  }, [category]);
 
   return (
-    <Layout>
+    <div className="flex flex-col min-h-screen bg-gray-50">
+      <Header />
+      
       <main className="flex-grow">
         <div className="container px-4 py-8 mx-auto">
           {/* Category Header */}
@@ -87,32 +63,15 @@ const CategoryPage = () => {
               {/* Article Listing */}
               <div className="mb-8">
                 <h2 className="text-xl font-bold mb-4">All {formattedCategory} Articles</h2>
-                
-                {isLoading ? (
-                  <div className="space-y-6">
-                    {Array(5).fill(0).map((_, i) => (
-                      <div key={i} className="flex animate-pulse">
-                        <div className="w-1/3 bg-gray-200 h-32 rounded-md mr-4"></div>
-                        <div className="w-2/3 space-y-2">
-                          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                          <div className="h-3 bg-gray-200 rounded w-full"></div>
-                          <div className="h-3 bg-gray-200 rounded w-full"></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {articles.slice(1).map((article) => (
-                      <ArticleCard 
-                        key={article.id} 
-                        article={article} 
-                        variant="horizontal"
-                      />
-                    ))}
-                  </div>
-                )}
+                <div className="space-y-6">
+                  {articles.slice(1).map((article) => (
+                    <ArticleCard 
+                      key={article.id} 
+                      article={article} 
+                      variant="horizontal"
+                    />
+                  ))}
+                </div>
               </div>
 
               {/* Pagination */}
@@ -160,7 +119,9 @@ const CategoryPage = () => {
           </div>
         </div>
       </main>
-    </Layout>
+
+      <Footer />
+    </div>
   );
 };
 

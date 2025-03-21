@@ -117,8 +117,7 @@ export const Header = () => {
               <img 
                 src="/lovable-uploads/97104a5b-83e2-4269-b309-9c33310d3385.png" 
                 alt="INLAND EMPIRE TRUENEWS" 
-                className="h-16 md:h-20 object-contain max-w-full"
-                style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))' }}
+                className="h-16 md:h-20"
               />
             </div>
           </Link>
