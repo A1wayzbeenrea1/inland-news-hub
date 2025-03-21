@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -159,14 +159,42 @@ const communityInfo = {
 const CommunityPage = () => {
   const { community } = useParams<{ community: string }>();
   const communityKey = community || '';
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Add safety checks to prevent errors
   const info = communityInfo[communityKey as keyof typeof communityInfo];
-  const articles = communityArticles[communityKey as keyof typeof communityArticles] || [];
-  const latestArticles = getRecentArticles(5);
+  const articles = communityKey ? communityArticles[communityKey as keyof typeof communityArticles] || [] : [];
+  const latestArticles = getRecentArticles(5).filter(article => {
+    // Make sure we don't include duplicates
+    if (!articles || !Array.isArray(articles)) return true;
+    return !articles.some(a => a.id === article.id);
+  });
   
   useEffect(() => {
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
+    
+    // Simulate loading
+    setLoading(true);
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 500);
+    
+    return () => clearTimeout(timer);
   }, [community, info]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-grow flex items-center justify-center">
+          <div className="animate-spin h-10 w-10 border-4 border-news-primary border-t-transparent rounded-full"></div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!info) {
     return (
@@ -187,6 +215,25 @@ const CommunityPage = () => {
       </div>
     );
   }
+
+  // Feedspot widget markup
+  const feedspotWidget = (
+    <div className="bg-white p-4 rounded-lg shadow-sm border">
+      <h2 className="text-xl font-bold mb-4">Redlands News Feed</h2>
+      <div className="aspect-auto w-full overflow-hidden">
+        <iframe 
+          className="w-full"
+          title="Redlands News Feed"
+          frameBorder="0" 
+          allow="autoplay; encrypted-media" 
+          allowFullScreen 
+          scrolling="no"
+          style={{ height: '476px' }}
+          src="https://www.feedspot.com/widgets/lookup/vciG7f40a3c5"
+        ></iframe>
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -219,7 +266,7 @@ const CommunityPage = () => {
 
         <div className="container px-4 py-8 mx-auto">
           {/* Featured Article */}
-          {articles.length > 0 && (
+          {articles && articles.length > 0 && (
             <>
               <CategoryHeader 
                 title="Latest Community News" 
@@ -243,7 +290,7 @@ const CommunityPage = () => {
             <div className="lg:col-span-2">
               {/* Article Listing */}
               <div className="mb-8">
-                {articles.length > 1 ? (
+                {articles && articles.length > 1 ? (
                   <>
                     <h2 className="text-xl font-bold mb-4">More {info.name} Stories</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -256,7 +303,7 @@ const CommunityPage = () => {
                       ))}
                     </div>
                   </>
-                ) : articles.length === 0 ? (
+                ) : articles && articles.length === 0 ? (
                   <div className="p-6 bg-white rounded-lg shadow-sm border">
                     <h2 className="text-xl font-bold mb-2">No Recent Stories</h2>
                     <p className="text-gray-600">
@@ -279,6 +326,13 @@ const CommunityPage = () => {
                   about events, developments, and stories that matter to {info.name} residents.
                 </p>
               </div>
+              
+              {/* Feedspot Widget - Only show for Redlands */}
+              {communityKey === 'redlands' && (
+                <div className="mb-8">
+                  {feedspotWidget}
+                </div>
+              )}
             </div>
 
             {/* Sidebar - 1/3 width on desktop */}
@@ -293,16 +347,13 @@ const CommunityPage = () => {
               <div>
                 <h2 className="text-xl font-bold mb-4">Latest Inland Empire News</h2>
                 <div className="space-y-4">
-                  {latestArticles
-                    .filter(article => !articles.some(a => a.id === article.id))
-                    .slice(0, 5)
-                    .map((article) => (
-                      <ArticleCard 
-                        key={article.id} 
-                        article={article} 
-                        variant="minimal"
-                      />
-                    ))}
+                  {latestArticles.slice(0, 5).map((article) => (
+                    <ArticleCard 
+                      key={article.id} 
+                      article={article} 
+                      variant="minimal"
+                    />
+                  ))}
                 </div>
               </div>
               

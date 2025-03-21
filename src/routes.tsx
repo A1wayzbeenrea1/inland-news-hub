@@ -29,6 +29,8 @@ export const AppRoutes = () => {
       <Route path="/category/health" element={<HealthCategoryPage />} />
       <Route path="/category/environment" element={<EnvironmentCategoryPage />} />
       <Route path="/category/most-recent" element={<MostRecentCategoryPage />} />
+      <Route path="/community/:community" element={<CommunityPage />} />
+      <Route path="/communities/:community" element={<CommunityPage />} />
       <Route path="/communities" element={<CommunityPage />} />
       <Route path="/admin/login" element={<AdminLogin />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
