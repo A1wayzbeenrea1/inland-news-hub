@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -57,7 +56,9 @@ const AdminDashboard = () => {
     const savedStories = localStorage.getItem("adminStories");
     if (savedStories) {
       try {
-        setStories(JSON.parse(savedStories));
+        const parsedStories = JSON.parse(savedStories);
+        console.log(`Loaded ${parsedStories.length} admin stories from localStorage`);
+        setStories(parsedStories);
       } catch (error) {
         console.error("Error loading stories:", error);
       }
@@ -67,9 +68,16 @@ const AdminDashboard = () => {
   // Save stories to localStorage whenever they change
   useEffect(() => {
     if (stories.length > 0) {
+      console.log(`Saving ${stories.length} admin stories to localStorage`);
       localStorage.setItem("adminStories", JSON.stringify(stories));
+      
+      // Display success toast when stories are saved
+      toast({
+        title: "Stories Saved",
+        description: `Successfully saved ${stories.length} stories to local storage`,
+      });
     }
-  }, [stories]);
+  }, [stories, toast]);
 
   const handleLogout = () => {
     localStorage.removeItem("adminAuthenticated");
@@ -96,6 +104,11 @@ const AdminDashboard = () => {
   };
 
   const handleSaveStory = (story: Article) => {
+    // Make sure the story has a valid date
+    if (!story.publishedAt) {
+      story.publishedAt = new Date().toISOString();
+    }
+    
     // Check if story already exists
     const index = stories.findIndex(s => s.id === story.id);
     
@@ -106,25 +119,51 @@ const AdminDashboard = () => {
         newStories[index] = story;
         return newStories;
       });
+      console.log(`Updated story: ${story.title}`);
     } else {
       // Add new story
       setStories(prevStories => [...prevStories, story]);
+      console.log(`Added new story: ${story.title}`);
     }
+    
+    // Save immediately to localStorage
+    setTimeout(() => {
+      const currentStories = localStorage.getItem("adminStories");
+      console.log(`After saving, localStorage has ${currentStories ? JSON.parse(currentStories).length : 0} stories`);
+    }, 500);
     
     setActiveView("list");
   };
 
   const handleAddStoryFromUrl = (story: Article) => {
+    // Make sure the story has a valid date
+    if (!story.publishedAt) {
+      story.publishedAt = new Date().toISOString();
+    }
+    
     // Add the new story from URL importer
     setStories(prevStories => [...prevStories, story]);
+    console.log(`Added new story from URL: ${story.title}`);
     
     // Go back to the list view
     setActiveView("list");
   };
 
   const handleAddStoriesFromKtla = (newStories: Article[]) => {
+    // Make sure all stories have valid dates
+    const storiesWithDates = newStories.map(story => {
+      if (!story.publishedAt) {
+        return {
+          ...story,
+          publishedAt: new Date().toISOString()
+        };
+      }
+      return story;
+    });
+    
     // Add multiple stories from KTLA importer
-    setStories(prevStories => [...prevStories, ...newStories]);
+    setStories(prevStories => [...prevStories, ...storiesWithDates]);
+    console.log(`Added ${newStories.length} new stories from KTLA`);
     
     // Go back to the list view
     setActiveView("list");

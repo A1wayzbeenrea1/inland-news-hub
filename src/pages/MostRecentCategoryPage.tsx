@@ -15,8 +15,18 @@ const MostRecentCategoryPage = () => {
     const loadArticles = async () => {
       setIsLoading(true);
       try {
-        // Explicitly load most recent articles, including admin stories
+        // Make sure we get admin stories by forcing a fresh load
         const mostRecent = await getMostRecentArticles(30);
+        console.log('Most Recent Articles loaded:', mostRecent.length);
+        
+        // Check if we have admin stories
+        const adminStories = localStorage.getItem("adminStories");
+        if (adminStories) {
+          console.log('Admin stories found in localStorage');
+        } else {
+          console.log('No admin stories found in localStorage');
+        }
+        
         setArticles(mostRecent);
       } catch (error) {
         console.error('Error loading most recent articles:', error);

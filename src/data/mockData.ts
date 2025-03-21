@@ -200,11 +200,14 @@ const getAdminStories = (): Article[] => {
   try {
     const savedStories = localStorage.getItem("adminStories");
     if (savedStories) {
-      return JSON.parse(savedStories);
+      const parsedStories = JSON.parse(savedStories);
+      console.log(`Found ${parsedStories.length} admin stories in localStorage`);
+      return parsedStories;
     }
   } catch (error) {
     console.error("Error loading admin stories:", error);
   }
+  console.log("No admin stories found or error loading them");
   return [];
 };
 
@@ -231,9 +234,10 @@ export const getApiArticles = async (forceFresh = false): Promise<Article[]> => 
 
 // Get articles by category, combining mock and API data
 export const getArticlesByCategory = (category: string, includeApi: boolean = true): Article[] => {
-  // Get admin stories first
+  // Get admin stories first - ensure they take priority
   const adminStories = getAdminStories();
   const adminCategoryStories = adminStories.filter(article => article.category === category);
+  console.log(`Found ${adminCategoryStories.length} admin stories for category ${category}`);
   
   // Start with mock articles
   let result = articles.filter(article => article.category === category);
@@ -263,25 +267,57 @@ export const getFeaturedArticles = async (): Promise<Article[]> => {
   return [...adminFeatured, ...apiFeatured, ...mockFeatured].slice(0, 5);
 };
 
-// Get most recent articles (new function)
+// Get most recent articles (fixed to properly include admin stories)
 export const getMostRecentArticles = async (limit: number = 10): Promise<Article[]> => {
   await getApiArticles(); // Ensure API articles are loaded
+  
+  // Get admin stories with detailed logging
   const adminStories = getAdminStories();
+  console.log(`getMostRecentArticles: Found ${adminStories.length} admin stories`);
   
   // Combine all articles and sort by date
   const allArticles = [...adminStories, ...apiArticles, ...articles];
+  console.log(`getMostRecentArticles: Combined ${allArticles.length} total articles`);
   
-  return allArticles
+  // Make sure all articles have valid dates
+  const articlesWithDates = allArticles.map(article => {
+    if (!article.publishedAt) {
+      console.log(`Article without date found: ${article.title}. Setting to current date.`);
+      return {
+        ...article,
+        publishedAt: new Date().toISOString()
+      };
+    }
+    return article;
+  });
+  
+  const sortedArticles = articlesWithDates
     .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
     .slice(0, limit);
+  
+  console.log(`getMostRecentArticles: Returning ${sortedArticles.length} articles`);
+  return sortedArticles;
 };
 
-// Keep the original getRecentArticles for backward compatibility
+// Keep the original getRecentArticles for backward compatibility but fix it
 export const getRecentArticles = (limit: number = 5): Article[] => {
   const adminStories = getAdminStories();
+  console.log(`getRecentArticles: Found ${adminStories.length} admin stories`);
+  
   const allArticles = [...adminStories, ...apiArticles, ...articles];
   
-  return allArticles
+  // Make sure all articles have valid dates
+  const articlesWithDates = allArticles.map(article => {
+    if (!article.publishedAt) {
+      return {
+        ...article,
+        publishedAt: new Date().toISOString()
+      };
+    }
+    return article;
+  });
+  
+  return articlesWithDates
     .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
     .slice(0, limit);
 };
