@@ -19,6 +19,20 @@ import {
 import { toast } from "@/components/ui/use-toast";
 import { MetaTags } from '@/components/common/MetaTags';
 
+// Define a more complete admin story type
+interface AdminStory extends Partial<ArticleType> {
+  id: string;
+  title: string;
+  date?: string;
+  source?: string;
+  content?: string;
+  excerpt?: string;
+  author?: string;
+  image?: string;
+  slug?: string;
+  category?: string;
+}
+
 const Article = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
@@ -48,11 +62,32 @@ const Article = () => {
         try {
           const adminStories = localStorage.getItem("adminStories");
           if (adminStories) {
-            const stories = JSON.parse(adminStories) as ArticleType[];
-            foundArticle = stories.find(story => story.slug === slug);
+            const stories = JSON.parse(adminStories);
+            console.log("Admin stories:", stories);
             
-            if (foundArticle) {
-              console.log("Found admin story in localStorage:", foundArticle.title);
+            // Find story by matching slug
+            const adminStory = stories.find((story: AdminStory) => 
+              story.slug === slug || 
+              (story.title && story.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') === slug)
+            );
+            
+            if (adminStory) {
+              console.log("Found admin story in localStorage:", adminStory.title);
+              
+              // Convert admin story to ArticleType format
+              foundArticle = {
+                id: adminStory.id || `admin-${Date.now()}`,
+                title: adminStory.title || "Untitled",
+                excerpt: adminStory.excerpt || adminStory.content?.substring(0, 150) || "No excerpt available",
+                content: adminStory.content || "<p>No content available</p>",
+                image: adminStory.image || "/placeholder.svg",
+                category: adminStory.category || "News",
+                author: adminStory.author || "Admin",
+                publishedAt: adminStory.date || new Date().toISOString(),
+                slug: slug,
+                source: adminStory.source || "Admin",
+                tags: []
+              };
             }
           }
         } catch (error) {
@@ -79,16 +114,24 @@ const Article = () => {
   }, [navigate, slug]);
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', { 
-      weekday: 'long',
-      month: 'long', 
-      day: 'numeric', 
-      year: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric',
-      hour12: true
-    }).format(date);
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return "Recently published";
+      }
+      return new Intl.DateTimeFormat('en-US', { 
+        weekday: 'long',
+        month: 'long', 
+        day: 'numeric', 
+        year: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true
+      }).format(date);
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "Recently published";
+    }
   };
 
   const handleCopyLink = () => {
@@ -160,37 +203,47 @@ const Article = () => {
           <div className="flex items-center text-sm text-gray-500 mb-4">
             <Link to="/" className="hover:text-news-primary">Home</Link>
             <span className="mx-2">/</span>
-            <Link to={`/category/${article.category.toLowerCase().replace(' ', '-')}`} className="hover:text-news-primary">
-              {article.category}
-            </Link>
-            <span className="mx-2">/</span>
+            {article.category && (
+              <>
+                <Link to={`/category/${article.category.toLowerCase().replace(/\s+/g, '-')}`} className="hover:text-news-primary">
+                  {article.category}
+                </Link>
+                <span className="mx-2">/</span>
+              </>
+            )}
             <span className="text-gray-700 truncate">{article.title}</span>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
               <div className="mb-6">
-                <Link 
-                  to={`/category/${article.category.toLowerCase().replace(' ', '-')}`}
-                  className="inline-block mb-2"
-                >
-                  <Badge className="bg-news-secondary hover:bg-news-primary border-none text-sm">
-                    {article.category}
-                  </Badge>
-                </Link>
+                {article.category && (
+                  <Link 
+                    to={`/category/${article.category.toLowerCase().replace(/\s+/g, '-')}`}
+                    className="inline-block mb-2"
+                  >
+                    <Badge className="bg-news-secondary hover:bg-news-primary border-none text-sm">
+                      {article.category}
+                    </Badge>
+                  </Link>
+                )}
                 <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-news-dark font-serif mb-4">
                   {article.title}
                 </h1>
                 <p className="text-lg text-gray-600 mb-4">{article.excerpt}</p>
                 <div className="flex flex-wrap items-center text-sm text-gray-500 gap-4 mb-4">
-                  <div className="flex items-center">
-                    <User size={16} className="mr-1" />
-                    <span>By {article.author}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Calendar size={16} className="mr-1" />
-                    <span>{formatDate(article.publishedAt)}</span>
-                  </div>
+                  {article.author && (
+                    <div className="flex items-center">
+                      <User size={16} className="mr-1" />
+                      <span>By {article.author}</span>
+                    </div>
+                  )}
+                  {article.publishedAt && (
+                    <div className="flex items-center">
+                      <Calendar size={16} className="mr-1" />
+                      <span>{formatDate(article.publishedAt)}</span>
+                    </div>
+                  )}
                   {article.source && (
                     <div className="flex items-center">
                       <span className="text-news-primary">Source: {article.source}</span>
@@ -199,13 +252,15 @@ const Article = () => {
                 </div>
               </div>
 
-              <div className="aspect-[16/9] w-full overflow-hidden rounded-lg mb-6">
-                <img 
-                  src={article.image} 
-                  alt={article.title} 
-                  className="h-full w-full object-cover"
-                />
-              </div>
+              {article.image && (
+                <div className="aspect-[16/9] w-full overflow-hidden rounded-lg mb-6">
+                  <img 
+                    src={article.image} 
+                    alt={article.title} 
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              )}
 
               <div className="flex flex-wrap justify-between items-center mb-6 gap-2">
                 <Button 
@@ -300,9 +355,11 @@ const Article = () => {
               />
 
               <div className="flex flex-wrap gap-2 mb-8">
-                <Badge variant="outline" className="bg-gray-100 hover:bg-gray-200 text-gray-700">
-                  {article.category}
-                </Badge>
+                {article.category && (
+                  <Badge variant="outline" className="bg-gray-100 hover:bg-gray-200 text-gray-700">
+                    {article.category}
+                  </Badge>
+                )}
                 <Badge variant="outline" className="bg-gray-100 hover:bg-gray-200 text-gray-700">
                   Inland Empire
                 </Badge>
@@ -321,8 +378,8 @@ const Article = () => {
               <div className="bg-gray-100 p-4 rounded-lg mb-8">
                 <h3 className="font-bold text-lg mb-2">About the Author</h3>
                 <p className="text-gray-700">
-                  {article.author} is a staff writer covering {article.category.toLowerCase()} for the Inland Empire News Hub.
-                  Have a tip or story idea? Contact them at {article.author.toLowerCase().replace(' ', '.')}@inlandnewshub.com.
+                  {article.author} is a staff writer covering {article.category?.toLowerCase() || 'local news'} for the Inland Empire News Hub.
+                  Have a tip or story idea? Contact them at {article.author?.toLowerCase().replace(/\s+/g, '.')}@inlandnewshub.com.
                 </p>
               </div>
 
@@ -343,18 +400,20 @@ const Article = () => {
             <div className="space-y-8">
               <AdBanner size="small" />
               
-              <div>
-                <h2 className="text-xl font-bold mb-4">More from {article.category}</h2>
-                <div className="space-y-4">
-                  {getArticlesByCategory(article.category).slice(0, 5).map((article) => (
-                    <ArticleCard 
-                      key={article.id} 
-                      article={article} 
-                      variant="minimal"
-                    />
-                  ))}
+              {article.category && (
+                <div>
+                  <h2 className="text-xl font-bold mb-4">More from {article.category}</h2>
+                  <div className="space-y-4">
+                    {getArticlesByCategory(article.category).slice(0, 5).map((article) => (
+                      <ArticleCard 
+                        key={article.id} 
+                        article={article} 
+                        variant="minimal"
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
               
               <NewsletterSignup />
             </div>
