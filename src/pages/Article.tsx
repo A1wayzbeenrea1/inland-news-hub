@@ -66,10 +66,13 @@ const Article = () => {
             console.log("Admin stories:", stories);
             
             // Find story by matching slug
-            const adminStory = stories.find((story: AdminStory) => 
-              story.slug === slug || 
-              (story.title && story.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') === slug)
-            );
+            const adminStory = stories.find((story: AdminStory) => {
+              // Safely generate a comparison slug if title exists
+              const storySlug = story.slug || 
+                (story.title ? story.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') : '');
+              
+              return storySlug === slug;
+            });
             
             if (adminStory) {
               console.log("Found admin story in localStorage:", adminStory.title);
@@ -78,7 +81,7 @@ const Article = () => {
               foundArticle = {
                 id: adminStory.id || `admin-${Date.now()}`,
                 title: adminStory.title || "Untitled",
-                excerpt: adminStory.excerpt || adminStory.content?.substring(0, 150) || "No excerpt available",
+                excerpt: adminStory.excerpt || (adminStory.content ? adminStory.content.substring(0, 150) : "No excerpt available"),
                 content: adminStory.content || "<p>No content available</p>",
                 image: adminStory.image || "/placeholder.svg",
                 category: adminStory.category || "News",
