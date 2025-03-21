@@ -1,3 +1,4 @@
+import { fetchLatestNews } from '@/services/newsApiService';
 
 export interface Article {
   id: string;
@@ -10,9 +11,10 @@ export interface Article {
   publishedAt: string;
   slug: string;
   featured?: boolean;
-  tags?: string[]; // Add tags property to the interface
+  tags?: string[];
 }
 
+// Original mock articles
 export const articles: Article[] = [
   {
     id: '1',
@@ -187,29 +189,93 @@ export const articles: Article[] = [
   }
 ];
 
-export const getArticlesByCategory = (category: string) => {
-  return articles.filter(article => article.category === category);
+// Cache for API fetched articles
+let apiArticles: Article[] = [];
+let lastFetchTime: number = 0;
+const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+
+// Function to get articles from API and refresh cache if needed
+export const getApiArticles = async (): Promise<Article[]> => {
+  const now = Date.now();
+  
+  // Check if cache is stale
+  if (apiArticles.length === 0 || now - lastFetchTime > CACHE_DURATION) {
+    try {
+      const newArticles = await fetchLatestNews();
+      if (newArticles && newArticles.length > 0) {
+        apiArticles = newArticles;
+        lastFetchTime = now;
+      }
+    } catch (error) {
+      console.error("Error refreshing news articles:", error);
+    }
+  }
+  
+  return apiArticles;
 };
 
-export const getFeaturedArticles = () => {
-  return articles.filter(article => article.featured);
+// Get articles by category, combining mock and API data
+export const getArticlesByCategory = (category: string, includeApi: boolean = true): Article[] => {
+  // Start with mock articles
+  let result = articles.filter(article => article.category === category);
+  
+  // Add API articles if available and requested
+  if (includeApi && apiArticles.length > 0) {
+    const apiCategoryArticles = apiArticles.filter(article => article.category === category);
+    result = [...apiCategoryArticles, ...result];
+  }
+  
+  return result;
 };
 
-export const getRecentArticles = (limit: number = 5) => {
+// Get featured articles, combining mock and API data
+export const getFeaturedArticles = async (): Promise<Article[]> => {
+  await getApiArticles(); // Ensure API articles are loaded
+  
+  // Combine featured articles from both sources
+  const mockFeatured = articles.filter(article => article.featured);
+  const apiFeatured = apiArticles.filter(article => article.featured);
+  
+  // Prioritize API featured articles
+  return [...apiFeatured, ...mockFeatured].slice(0, 5);
+};
+
+// Get most recent articles (new function)
+export const getMostRecentArticles = async (limit: number = 10): Promise<Article[]> => {
+  await getApiArticles(); // Ensure API articles are loaded
+  
+  // Combine all articles and sort by date
+  const allArticles = [...apiArticles, ...articles];
+  
+  return allArticles
+    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+    .slice(0, limit);
+};
+
+// Keep the original getRecentArticles for backward compatibility
+export const getRecentArticles = (limit: number = 5): Article[] => {
   return [...articles]
     .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
     .slice(0, limit);
 };
 
-export const getArticleBySlug = (slug: string) => {
-  return articles.find(article => article.slug === slug);
+export const getArticleBySlug = (slug: string): Article | undefined => {
+  // Check mock articles first
+  const mockArticle = articles.find(article => article.slug === slug);
+  if (mockArticle) return mockArticle;
+  
+  // Then check API articles
+  return apiArticles.find(article => article.slug === slug);
 };
 
-export const getRelatedArticles = (slug: string, limit: number = 3) => {
+export const getRelatedArticles = (slug: string, limit: number = 3): Article[] => {
   const article = getArticleBySlug(slug);
   if (!article) return [];
   
-  return articles
+  // Combine both sources
+  const allArticles = [...apiArticles, ...articles];
+  
+  return allArticles
     .filter(a => a.slug !== slug && a.category === article.category)
     .slice(0, limit);
 };

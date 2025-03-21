@@ -1,3 +1,5 @@
+
+import { useEffect, useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { AdBanner } from '@/components/layout/AdBanner';
 import { TopStories } from '@/components/news/TopStories';
@@ -6,12 +8,17 @@ import { CategoryHeader } from '@/components/news/CategoryHeader';
 import { WeatherWidget } from '@/components/news/WeatherWidget';
 import { NewsletterSignup } from '@/components/news/NewsletterSignup';
 import { EventsCalendar } from '@/components/news/EventsCalendar';
-import { getFeaturedArticles, getArticlesByCategory, getRecentArticles } from '@/data/mockData';
+import { getFeaturedArticles, getArticlesByCategory, getRecentArticles, getMostRecentArticles, Article } from '@/data/mockData';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
 
 const Index = () => {
-  const featuredArticles = getFeaturedArticles();
+  // State for async loaded data
+  const [featuredArticles, setFeaturedArticles] = useState<Article[]>([]);
+  const [mostRecentArticles, setMostRecentArticles] = useState<Article[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Synchronous article data
   const publicSafetyArticles = getArticlesByCategory('Public Safety');
   const politicsArticles = getArticlesByCategory('Politics');
   const businessArticles = getArticlesByCategory('Business');
@@ -20,14 +27,60 @@ const Index = () => {
   const environmentArticles = getArticlesByCategory('Environment');
   const latestArticles = getRecentArticles(5);
 
+  // Load async data on component mount
+  useEffect(() => {
+    const loadAsyncData = async () => {
+      setIsLoading(true);
+      try {
+        const [featured, recent] = await Promise.all([
+          getFeaturedArticles(),
+          getMostRecentArticles(6)
+        ]);
+        
+        setFeaturedArticles(featured);
+        setMostRecentArticles(recent);
+      } catch (error) {
+        console.error('Error loading articles:', error);
+        // Fallback to mock data if API fails
+        setFeaturedArticles(getFeaturedArticles() as unknown as Article[]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadAsyncData();
+    
+    // Set up recurring updates every 15 minutes
+    const interval = setInterval(() => {
+      loadAsyncData();
+      console.log('Refreshed news data at', new Date().toLocaleTimeString());
+    }, 15 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <Layout>
       <div className="container px-4 py-8 mx-auto">
         {/* Featured Top Stories Slider */}
-        <TopStories articles={featuredArticles} className="mb-8" />
+        <TopStories articles={isLoading ? [] : featuredArticles} className="mb-8" />
         
         {/* Ad Banner */}
         <AdBanner size="large" className="my-8" />
+
+        {/* Most Recent News Section - NEW SECTION */}
+        <section className="mb-12">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-3xl font-bold text-news-dark font-serif border-b-2 border-news-primary pb-2">Most Recent</h2>
+            <Link to="/category/most-recent" className="text-news-primary hover:underline text-sm">View All</Link>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {mostRecentArticles.slice(0, 6).map((article) => (
+              <ArticleCard key={article.id} article={article} />
+            ))}
+          </div>
+        </section>
 
         {/* Quick Category Navigation */}
         <div className="flex overflow-x-auto pb-4 mb-8 gap-2 scrollbar-thin">
