@@ -16,11 +16,11 @@ declare module "@/data/mockData" {
     shareText?: string; // Added for social media sharing
   }
 
-  // Add function declarations
-  export function getArticlesByCategory(category: string, includeApi?: boolean): Article[];
-  export function getRecentArticles(limit?: number): Article[];
-  export function getArticleBySlug(slug: string): Article | undefined;
-  export function getRelatedArticles(slug: string, limit?: number): Article[];
+  // Update function declarations to indicate they return Promises
+  export function getArticlesByCategory(category: string, includeApi?: boolean): Promise<Article[]>;
+  export function getRecentArticles(limit?: number): Promise<Article[]>;
+  export function getArticleBySlug(slug: string): Promise<Article | undefined>;
+  export function getRelatedArticles(slug: string, limit?: number): Promise<Article[]>;
   export function getFeaturedArticles(): Promise<Article[]>;
   export function getMostRecentArticles(limit?: number): Promise<Article[]>;
   export function getApiArticles(forceFresh?: boolean): Promise<Article[]>;

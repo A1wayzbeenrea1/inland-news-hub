@@ -1,4 +1,3 @@
-
 import { fetchLatestNews } from '@/services/newsApiService';
 import { fetchAllRssFeeds } from '@/services/rssFeedService';
 
@@ -405,7 +404,7 @@ export const getMostRecentArticles = async (limit: number = 10): Promise<Article
   return sortedArticles;
 };
 
-// Keep the original getRecentArticles for backward compatibility but fix it to include RSS
+// Keep the original getRecentArticles for backward compatibility but fix it to include RSS and return a Promise
 export const getRecentArticles = async (limit: number = 5): Promise<Article[]> => {
   const adminStories = getAdminStories();
   console.log(`getRecentArticles: Found ${adminStories.length} admin stories`);
@@ -464,3 +463,4 @@ export const getRelatedArticles = async (slug: string, limit: number = 3): Promi
     .filter(a => a.slug !== slug && a.category === article.category)
     .slice(0, limit);
 };
+
