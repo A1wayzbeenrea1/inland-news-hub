@@ -168,6 +168,7 @@ export const convertToArticle = (scraped: ScrapedArticle): Article => {
     publishedAt: scraped.publishedAt || new Date().toISOString(),
     slug: generateSlug(scraped.title),
     featured: false,
-    tags: [category, "News", "Inland Empire"]
+    tags: [category, "News", "Inland Empire"],
+    source: "Web Import"
   };
 };

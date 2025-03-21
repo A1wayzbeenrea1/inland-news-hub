@@ -9,13 +9,15 @@ import {
   Users,
   Settings,
   LogOut,
-  Link
+  Link,
+  ExternalLink
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { AdminStoryEditor } from "@/components/admin/AdminStoryEditor";
 import { AdminStoryList } from "@/components/admin/AdminStoryList";
 import { AdminUrlImporter } from "@/components/admin/AdminUrlImporter";
+import { AdminKtlaImporter } from "@/components/admin/AdminKtlaImporter";
 import { Article } from "@/data/mockData";
 import {
   Sidebar,
@@ -35,7 +37,7 @@ import {
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [activeView, setActiveView] = useState<"list" | "editor" | "importer">("list");
+  const [activeView, setActiveView] = useState<"list" | "editor" | "importer" | "ktla">("list");
   const [editingStory, setEditingStory] = useState<any | null>(null);
   const [stories, setStories] = useState<Article[]>([]);
 
@@ -120,6 +122,14 @@ const AdminDashboard = () => {
     setActiveView("list");
   };
 
+  const handleAddStoriesFromKtla = (newStories: Article[]) => {
+    // Add multiple stories from KTLA importer
+    setStories(prevStories => [...prevStories, ...newStories]);
+    
+    // Go back to the list view
+    setActiveView("list");
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gray-50">
@@ -156,6 +166,12 @@ const AdminDashboard = () => {
                     <SidebarMenuButton onClick={() => setActiveView("importer")}>
                       <Link />
                       <span>Import from URL</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton onClick={() => setActiveView("ktla")}>
+                      <ExternalLink />
+                      <span>KTLA News</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>
@@ -204,12 +220,18 @@ const AdminDashboard = () => {
                   ? "Stories Management" 
                   : activeView === "editor" 
                     ? "Story Editor" 
-                    : "Import from URL"}
+                    : activeView === "importer"
+                      ? "Import from URL"
+                      : "KTLA News Import"}
               </h1>
             </div>
             <div>
               {activeView === "list" ? (
                 <div className="flex gap-2">
+                  <Button onClick={() => setActiveView("ktla")} variant="outline">
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    KTLA News
+                  </Button>
                   <Button onClick={() => setActiveView("importer")} variant="outline">
                     <Link className="mr-2 h-4 w-4" />
                     Import from URL
@@ -236,8 +258,10 @@ const AdminDashboard = () => {
                 onCancel={handleBackToList} 
                 onSave={handleSaveStory} 
               />
-            ) : (
+            ) : activeView === "importer" ? (
               <AdminUrlImporter onAddStory={handleAddStoryFromUrl} />
+            ) : (
+              <AdminKtlaImporter onAddStories={handleAddStoriesFromKtla} />
             )}
           </main>
         </div>
