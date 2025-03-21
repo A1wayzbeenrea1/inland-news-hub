@@ -16,6 +16,8 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const feedspotWidgetRef = useRef<HTMLDivElement>(null);
+  const redlandsFeedspotWidgetRef = useRef<HTMLDivElement>(null);
+  const yucaipaFeedspotWidgetRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let rssRefreshInterval: ReturnType<typeof setInterval> | null = null;
@@ -68,32 +70,66 @@ const Index = () => {
     // Initial load
     loadAsyncData();
     
-    // Set up RSS feed refreshing
+    // Set up RSS feed refreshing - reduced by 75% (from 15 minutes to 3.75 minutes)
     rssRefreshInterval = setupRssFeedRefresh(async () => {
       console.log("RSS feeds refreshed, reloading articles");
       await loadAsyncData();
-    }, 15); // Refresh every 15 minutes
+    }, 3.75); // Reduced from 15 to 3.75 minutes (75% reduction)
     
-    // Initialize Feedspot widget
-    const loadFeedspotWidget = () => {
-      const script = document.createElement('script');
-      script.type = 'text/javascript';
-      script.id = 'iframecontent';
-      script.src = 'https://www.feedspot.com/widgets/Assets/js/wd-iframecontent.js';
-      script.setAttribute('data-wd-id', 'vcIef44b1196');
-      script.setAttribute('data-script', '');
-      script.setAttribute('data-host', '');
-      
-      // Clear the ref content before adding script to avoid duplications
+    // Initialize Feedspot widgets
+    const loadFeedspotWidgets = () => {
+      // Main news widget
       if (feedspotWidgetRef.current) {
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.id = 'iframecontent';
+        script.src = 'https://www.feedspot.com/widgets/Assets/js/wd-iframecontent.js';
+        script.setAttribute('data-wd-id', 'vcIef44b1196');
+        script.setAttribute('data-script', '');
+        script.setAttribute('data-host', '');
+        
         feedspotWidgetRef.current.innerHTML = '';
         feedspotWidgetRef.current.appendChild(script);
       }
+      
+      // Redlands community widget
+      if (redlandsFeedspotWidgetRef.current) {
+        const iframe = document.createElement('iframe');
+        iframe.className = 'widget_preview_iframe';
+        iframe.frameBorder = '0';
+        iframe.allow = 'autoplay; encrypted-media';
+        iframe.allowFullscreen = true;
+        iframe.scrolling = 'no';
+        iframe.style.width = '100%';
+        iframe.style.height = '476px';
+        iframe.style.visibility = 'visible';
+        iframe.src = 'https://www.feedspot.com/widgets/lookup/vciG7f40a3c5';
+        
+        redlandsFeedspotWidgetRef.current.innerHTML = '';
+        redlandsFeedspotWidgetRef.current.appendChild(iframe);
+      }
+      
+      // Yucaipa community widget
+      if (yucaipaFeedspotWidgetRef.current) {
+        const iframe = document.createElement('iframe');
+        iframe.className = 'widget_preview_iframe';
+        iframe.frameBorder = '0';
+        iframe.allow = 'autoplay; encrypted-media';
+        iframe.allowFullscreen = true;
+        iframe.scrolling = 'no';
+        iframe.style.width = '100%';
+        iframe.style.height = '476px';
+        iframe.style.visibility = 'visible';
+        iframe.src = 'https://www.feedspot.com/widgets/lookup/vciG7f40a3c5';
+        
+        yucaipaFeedspotWidgetRef.current.innerHTML = '';
+        yucaipaFeedspotWidgetRef.current.appendChild(iframe);
+      }
     };
     
-    // Load widget once data is loaded
+    // Load widgets once data is loaded
     if (!isLoading) {
-      loadFeedspotWidget();
+      loadFeedspotWidgets();
     }
     
     // Cleanup function
@@ -132,11 +168,26 @@ const Index = () => {
               </section>
             )}
 
-            {/* Feedspot Widget Section */}
+            {/* General News Feedspot Widget Section */}
             <section className="mb-8">
               <SectionHeader title="News From Around The Web" />
               <div ref={feedspotWidgetRef} className="mt-4 rounded-lg shadow-md p-4 bg-white"></div>
             </section>
+            
+            {/* Local Community Widgets */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              {/* Redlands Community Widget */}
+              <section className="mb-8">
+                <SectionHeader title="Redlands Community News" />
+                <div ref={redlandsFeedspotWidgetRef} className="mt-4 rounded-lg shadow-md p-4 bg-white"></div>
+              </section>
+              
+              {/* Yucaipa Community Widget */}
+              <section className="mb-8">
+                <SectionHeader title="Yucaipa Community News" />
+                <div ref={yucaipaFeedspotWidgetRef} className="mt-4 rounded-lg shadow-md p-4 bg-white"></div>
+              </section>
+            </div>
 
             {Object.entries(categoryArticles).map(([category, articles]) => (
               articles.length > 0 && (
