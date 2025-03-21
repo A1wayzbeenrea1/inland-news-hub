@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { MetaTags } from "@/components/common/MetaTags";
+import { Button } from "@/components/ui/button";
+import { Home } from "lucide-react";
 
 const NotFound = () => {
   const location = useLocation();
@@ -30,11 +32,11 @@ const NotFound = () => {
             The page you are looking for might have been removed, had its name changed, 
             or is temporarily unavailable.
           </p>
-          <Link 
-            to="/" 
-            className="bg-news-secondary hover:bg-news-primary text-white font-bold py-2 px-6 rounded transition-colors"
-          >
-            Back to Homepage
+          <Link to="/">
+            <Button className="bg-news-secondary hover:bg-news-primary text-white font-bold py-2 px-6 rounded transition-colors inline-flex items-center gap-2">
+              <Home size={18} />
+              Back to Homepage
+            </Button>
           </Link>
         </div>
       </div>

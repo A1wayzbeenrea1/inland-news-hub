@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useRef } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { ArticleCard } from '@/components/news/ArticleCard';
@@ -29,25 +30,29 @@ const Index = () => {
         const shouldForceRefresh = forceRefresh && (Date.now() - parseInt(forceRefresh)) < 10000;
         
         const [featuredArticlesData, publicSafetyArticles, educationArticles, politicsArticles, businessArticles] = await Promise.all([
-          getFeaturedArticles(),
-          getArticlesByCategory('Public Safety'),
-          getArticlesByCategory('Education'),
-          getArticlesByCategory('Politics'),
-          getArticlesByCategory('Business')
+          getFeaturedArticles().catch(err => { console.error("Error fetching featured articles:", err); return []; }),
+          getArticlesByCategory('Public Safety').catch(err => { console.error("Error fetching Public Safety articles:", err); return []; }),
+          getArticlesByCategory('Education').catch(err => { console.error("Error fetching Education articles:", err); return []; }),
+          getArticlesByCategory('Politics').catch(err => { console.error("Error fetching Politics articles:", err); return []; }),
+          getArticlesByCategory('Business').catch(err => { console.error("Error fetching Business articles:", err); return []; })
         ]);
         
         const adminStories = localStorage.getItem("adminStories");
         if (adminStories) {
-          const parsedStories = JSON.parse(adminStories);
-          console.log(`Index: Found ${parsedStories.length} admin stories in localStorage`);
+          try {
+            const parsedStories = JSON.parse(adminStories);
+            console.log(`Index: Found ${parsedStories.length} admin stories in localStorage`);
+          } catch (parseError) {
+            console.error("Error parsing admin stories:", parseError);
+          }
         }
         
-        setFeaturedArticles(featuredArticlesData);
+        setFeaturedArticles(featuredArticlesData || []);
         setCategoryArticles({
-          'Public Safety': publicSafetyArticles,
-          'Education': educationArticles,
-          'Politics': politicsArticles,
-          'Business': businessArticles,
+          'Public Safety': publicSafetyArticles || [],
+          'Education': educationArticles || [],
+          'Politics': politicsArticles || [],
+          'Business': businessArticles || [],
         });
         
         if (shouldForceRefresh) {
@@ -55,6 +60,11 @@ const Index = () => {
         }
       } catch (error) {
         console.error('Error loading data:', error);
+        toast({
+          title: "Loading Error",
+          description: "Could not load articles. Please try refreshing the page.",
+          variant: "destructive"
+        });
       } finally {
         setIsLoading(false);
       }
@@ -69,48 +79,60 @@ const Index = () => {
     
     const loadFeedspotWidgets = () => {
       if (feedspotWidgetRef.current) {
-        const script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.id = 'iframecontent';
-        script.src = 'https://www.feedspot.com/widgets/Assets/js/wd-iframecontent.js';
-        script.setAttribute('data-wd-id', 'vcIef44b1196');
-        script.setAttribute('data-script', '');
-        script.setAttribute('data-host', '');
-        
-        feedspotWidgetRef.current.innerHTML = '';
-        feedspotWidgetRef.current.appendChild(script);
+        try {
+          const script = document.createElement('script');
+          script.type = 'text/javascript';
+          script.id = 'iframecontent';
+          script.src = 'https://www.feedspot.com/widgets/Assets/js/wd-iframecontent.js';
+          script.setAttribute('data-wd-id', 'vcIef44b1196');
+          script.setAttribute('data-script', '');
+          script.setAttribute('data-host', '');
+          
+          feedspotWidgetRef.current.innerHTML = '';
+          feedspotWidgetRef.current.appendChild(script);
+        } catch (error) {
+          console.error("Error loading main Feedspot widget:", error);
+        }
       }
       
       if (redlandsFeedspotWidgetRef.current) {
-        const iframe = document.createElement('iframe');
-        iframe.className = 'widget_preview_iframe';
-        iframe.frameBorder = '0';
-        iframe.allow = 'autoplay; encrypted-media';
-        iframe.allowFullscreen = true;
-        iframe.scrolling = 'no';
-        iframe.style.width = '100%';
-        iframe.style.height = '476px';
-        iframe.style.visibility = 'visible';
-        iframe.src = 'https://www.feedspot.com/widgets/lookup/vciG7f40a3c5';
-        
-        redlandsFeedspotWidgetRef.current.innerHTML = '';
-        redlandsFeedspotWidgetRef.current.appendChild(iframe);
+        try {
+          const iframe = document.createElement('iframe');
+          iframe.className = 'widget_preview_iframe';
+          iframe.frameBorder = '0';
+          iframe.allow = 'autoplay; encrypted-media';
+          iframe.allowFullscreen = true;
+          iframe.scrolling = 'no';
+          iframe.style.width = '100%';
+          iframe.style.height = '476px';
+          iframe.style.visibility = 'visible';
+          iframe.src = 'https://www.feedspot.com/widgets/lookup/vciG7f40a3c5';
+          
+          redlandsFeedspotWidgetRef.current.innerHTML = '';
+          redlandsFeedspotWidgetRef.current.appendChild(iframe);
+        } catch (error) {
+          console.error("Error loading Redlands Feedspot widget:", error);
+        }
       }
       
       if (yucaipaFeedspotWidgetRef.current) {
-        const iframe = document.createElement('iframe');
-        iframe.className = 'widget_preview_iframe';
-        iframe.frameBorder = '0';
-        iframe.allow = 'autoplay; encrypted-media';
-        iframe.allowFullscreen = true;
-        iframe.scrolling = 'no';
-        iframe.style.width = '100%';
-        iframe.style.height = '476px';
-        iframe.style.visibility = 'visible';
-        iframe.src = 'https://www.feedspot.com/widgets/lookup/vciG7f40a3c5';
-        
-        yucaipaFeedspotWidgetRef.current.innerHTML = '';
-        yucaipaFeedspotWidgetRef.current.appendChild(iframe);
+        try {
+          const iframe = document.createElement('iframe');
+          iframe.className = 'widget_preview_iframe';
+          iframe.frameBorder = '0';
+          iframe.allow = 'autoplay; encrypted-media';
+          iframe.allowFullscreen = true;
+          iframe.scrolling = 'no';
+          iframe.style.width = '100%';
+          iframe.style.height = '476px';
+          iframe.style.visibility = 'visible';
+          iframe.src = 'https://www.feedspot.com/widgets/lookup/vciG7f40a3c5';
+          
+          yucaipaFeedspotWidgetRef.current.innerHTML = '';
+          yucaipaFeedspotWidgetRef.current.appendChild(iframe);
+        } catch (error) {
+          console.error("Error loading Yucaipa Feedspot widget:", error);
+        }
       }
     };
     
@@ -123,7 +145,7 @@ const Index = () => {
         clearInterval(rssRefreshInterval);
       }
     };
-  }, [isLoading]);
+  }, [isLoading, toast]);
 
   return (
     <Layout>
@@ -142,7 +164,7 @@ const Index = () => {
           </div>
         ) : (
           <>
-            {featuredArticles.length > 0 && (
+            {featuredArticles && featuredArticles.length > 0 && (
               <section className="mb-8">
                 <SectionHeader title="Featured Stories" />
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
@@ -170,8 +192,8 @@ const Index = () => {
               </section>
             </div>
 
-            {Object.entries(categoryArticles).map(([category, articles]) => (
-              articles.length > 0 && (
+            {categoryArticles && Object.entries(categoryArticles).map(([category, articles]) => (
+              articles && articles.length > 0 && (
                 <section key={category} className="mb-8">
                   <CategoryHeader title={category} />
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
