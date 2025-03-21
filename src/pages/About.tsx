@@ -13,11 +13,20 @@ const About = () => {
       <Header />
       <main className="container mx-auto py-8 px-4">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl md:text-4xl font-bold mb-6">About IE.TrueNews</h1>
+          {/* Logo Banner Image */}
+          <div className="w-full mb-8">
+            <img 
+              src="/lovable-uploads/47f04d90-3ca4-4b74-9867-fe02dc2793c2.png" 
+              alt="Inland Empire TrueNews" 
+              className="w-full object-contain shadow-md rounded-lg"
+            />
+          </div>
           
-          <section className="mb-8">
-            <h2 className="text-2xl font-bold mb-4">Our Mission</h2>
-            <p className="text-gray-700 mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold mb-8 text-center">About IE.TrueNews</h1>
+          
+          <section className="mb-10">
+            <h2 className="text-3xl font-bold mb-6 text-center">Our Mission</h2>
+            <p className="text-xl text-gray-700 mb-6 text-center">
               At IE.TrueNews, our mission is to provide accurate, timely, and relevant news coverage 
               to the communities of the Inland Empire. We believe that informed citizens make better decisions, 
               and we're committed to delivering the information you need to understand what's happening in your 
@@ -25,9 +34,9 @@ const About = () => {
             </p>
           </section>
           
-          <section className="mb-8">
-            <h2 className="text-2xl font-bold mb-4">Our Values</h2>
-            <ul className="list-disc pl-5 space-y-2 text-gray-700">
+          <section className="mb-10">
+            <h2 className="text-3xl font-bold mb-6 text-center">Our Values</h2>
+            <ul className="list-disc pl-5 space-y-4 text-xl text-gray-700 max-w-2xl mx-auto">
               <li><strong>Accuracy:</strong> We verify our facts and correct our mistakes promptly.</li>
               <li><strong>Independence:</strong> We report without fear or favor, serving the public interest.</li>
               <li><strong>Fairness:</strong> We present all sides of a story and avoid conflicts of interest.</li>
@@ -36,9 +45,9 @@ const About = () => {
             </ul>
           </section>
           
-          <section className="mb-8">
-            <h2 className="text-2xl font-bold mb-4">Our History</h2>
-            <p className="text-gray-700 mb-4">
+          <section className="mb-10">
+            <h2 className="text-3xl font-bold mb-6 text-center">Our History</h2>
+            <p className="text-xl text-gray-700 mb-6 text-center">
               Founded in 2023, IE.TrueNews emerged from a recognition that our communities needed 
               dedicated, in-depth coverage of local issues. What started as a small digital publication has 
               grown into a trusted source of news for residents throughout San Bernardino and Riverside counties.
@@ -46,14 +55,14 @@ const About = () => {
           </section>
           
           <section>
-            <h2 className="text-2xl font-bold mb-4">Contact Us</h2>
-            <p className="text-gray-700 mb-4">
+            <h2 className="text-3xl font-bold mb-6 text-center">Contact Us</h2>
+            <p className="text-xl text-gray-700 mb-6 text-center">
               We welcome your feedback, news tips, and questions. Please reach out to us at:
             </p>
-            <div className="bg-gray-100 p-4 rounded">
-              <p className="mb-2"><strong>Email:</strong> ie.truenews@gmail.com</p>
-              <p className="mb-2"><strong>Phone:</strong> (909) 300-7596</p>
-              <p><strong>Office:</strong> Serving the Inland Empire remotely and in-person</p>
+            <div className="bg-gray-100 p-6 rounded-lg shadow-md max-w-2xl mx-auto">
+              <p className="mb-3 text-xl"><strong>Email:</strong> ie.truenews@gmail.com</p>
+              <p className="mb-3 text-xl"><strong>Phone:</strong> (909) 300-7596</p>
+              <p className="text-xl"><strong>Office:</strong> Serving the Inland Empire remotely and in-person</p>
             </div>
           </section>
         </div>

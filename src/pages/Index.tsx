@@ -1,4 +1,3 @@
-
 import { Layout } from '@/components/layout/Layout';
 import { AdBanner } from '@/components/layout/AdBanner';
 import { TopStories } from '@/components/news/TopStories';
@@ -7,7 +6,7 @@ import { CategoryHeader } from '@/components/news/CategoryHeader';
 import { WeatherWidget } from '@/components/news/WeatherWidget';
 import { NewsletterSignup } from '@/components/news/NewsletterSignup';
 import { EventsCalendar } from '@/components/news/EventsCalendar';
-import { getFeaturedArticles, getArticlesByCategory, getRecentArticles } from '@/data/mockData';
+import { getFeaturedArticles, getArticlesByCategory, getMostRecentArticles } from '@/data/mockData';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
 
@@ -19,7 +18,7 @@ const Index = () => {
   const educationArticles = getArticlesByCategory('Education');
   const healthArticles = getArticlesByCategory('Health');
   const environmentArticles = getArticlesByCategory('Environment');
-  const latestArticles = getRecentArticles(5);
+  const latestArticles = getMostRecentArticles(5);
 
   return (
     <Layout>
