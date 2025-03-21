@@ -23,6 +23,18 @@ const Index = () => {
 
   return (
     <Layout>
+      {/* Full-width Logo Cover */}
+      <div className="relative w-full bg-gradient-to-b from-news-dark/90 to-news-dark/80 py-12 mb-6">
+        <div className="container mx-auto flex justify-center items-center">
+          <img 
+            src="/lovable-uploads/97104a5b-83e2-4269-b309-9c33310d3385.png" 
+            alt="INLAND EMPIRE TRUENEWS" 
+            className="h-44 md:h-60 object-contain max-w-full animate-fade-in"
+            style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))' }}
+          />
+        </div>
+      </div>
+
       <div className="container px-4 py-8 mx-auto">
         {/* Featured Top Stories Slider */}
         <TopStories articles={featuredArticles} className="mb-8" />
