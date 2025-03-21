@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
@@ -231,8 +230,8 @@ const CommunityPage = () => {
     );
   }
 
-  // Feedspot widget markup
-  const feedspotWidget = (
+  // Feedspot widget markup for Redlands
+  const redlandsFeedspotWidget = (
     <div className="bg-white p-4 rounded-lg shadow-sm border">
       <h2 className="text-xl font-bold mb-4">Redlands News Feed</h2>
       <div className="aspect-auto w-full overflow-hidden">
@@ -245,6 +244,25 @@ const CommunityPage = () => {
           scrolling="no"
           style={{ height: '476px' }}
           src="https://www.feedspot.com/widgets/lookup/vciG7f40a3c5"
+        ></iframe>
+      </div>
+    </div>
+  );
+  
+  // Feedspot widget markup for Yucaipa - Using a different source URL
+  const yucaipaFeedspotWidget = (
+    <div className="bg-white p-4 rounded-lg shadow-sm border">
+      <h2 className="text-xl font-bold mb-4">Yucaipa News Feed</h2>
+      <div className="aspect-auto w-full overflow-hidden">
+        <iframe 
+          className="w-full"
+          title="Yucaipa News Feed"
+          frameBorder="0" 
+          allow="autoplay; encrypted-media" 
+          allowFullScreen 
+          scrolling="no"
+          style={{ height: '476px' }}
+          src="https://www.feedspot.com/widgets/lookup/vcI7fbedd553"
         ></iframe>
       </div>
     </div>
@@ -342,12 +360,11 @@ const CommunityPage = () => {
                 </p>
               </div>
               
-              {/* Feedspot Widget - Only show for Redlands */}
-              {communityKey === 'redlands' && (
-                <div className="mb-8">
-                  {feedspotWidget}
-                </div>
-              )}
+              {/* Feedspot Widget - Only show appropriate widget based on community */}
+              <div className="mb-8">
+                {communityKey === 'redlands' && redlandsFeedspotWidget}
+                {communityKey === 'yucaipa' && yucaipaFeedspotWidget}
+              </div>
             </div>
 
             {/* Sidebar - 1/3 width on desktop */}
