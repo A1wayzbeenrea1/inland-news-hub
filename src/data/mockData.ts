@@ -195,6 +195,20 @@ let apiArticles: Article[] = [];
 let lastFetchTime: number = 0;
 const CACHE_DURATION = 15 * 60 * 1000; // Reduced to 15 minutes for more frequent updates
 
+// Helper function to ensure valid dates on articles
+const ensureValidDates = (articles: Article[]): Article[] => {
+  return articles.map(article => {
+    if (!article.publishedAt || isNaN(new Date(article.publishedAt).getTime())) {
+      console.log(`Article with invalid date found: ${article.title}. Setting to current date.`);
+      return {
+        ...article,
+        publishedAt: new Date().toISOString()
+      };
+    }
+    return article;
+  });
+};
+
 // Helper function to load admin stories from localStorage
 const getAdminStories = (): Article[] => {
   try {
@@ -202,7 +216,11 @@ const getAdminStories = (): Article[] => {
     if (savedStories) {
       const parsedStories = JSON.parse(savedStories);
       console.log(`Found ${parsedStories.length} admin stories in localStorage`);
-      return parsedStories;
+      
+      // Ensure all admin stories have valid dates
+      const storiesWithValidDates = ensureValidDates(parsedStories);
+      
+      return storiesWithValidDates;
     }
   } catch (error) {
     console.error("Error loading admin stories:", error);
@@ -275,25 +293,24 @@ export const getMostRecentArticles = async (limit: number = 10): Promise<Article
   const adminStories = getAdminStories();
   console.log(`getMostRecentArticles: Found ${adminStories.length} admin stories`);
   
-  // Combine all articles and sort by date
-  const allArticles = [...adminStories, ...apiArticles, ...articles];
+  // Combine all articles and validate dates
+  const allArticles = ensureValidDates([...adminStories, ...apiArticles, ...articles]);
   console.log(`getMostRecentArticles: Combined ${allArticles.length} total articles`);
   
-  // Make sure all articles have valid dates
-  const articlesWithDates = allArticles.map(article => {
-    if (!article.publishedAt) {
-      console.log(`Article without date found: ${article.title}. Setting to current date.`);
-      return {
-        ...article,
-        publishedAt: new Date().toISOString()
-      };
-    }
-    return article;
-  });
-  
-  const sortedArticles = articlesWithDates
-    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+  // Sort by date, ensuring proper date comparison
+  const sortedArticles = allArticles
+    .sort((a, b) => {
+      const dateA = new Date(a.publishedAt);
+      const dateB = new Date(b.publishedAt);
+      return dateB.getTime() - dateA.getTime();
+    })
     .slice(0, limit);
+  
+  // Log the sorted dates for debugging
+  console.log('Sorted articles dates:', sortedArticles.map(article => ({
+    title: article.title,
+    date: new Date(article.publishedAt).toISOString()
+  })));
   
   console.log(`getMostRecentArticles: Returning ${sortedArticles.length} articles`);
   return sortedArticles;
@@ -304,21 +321,14 @@ export const getRecentArticles = (limit: number = 5): Article[] => {
   const adminStories = getAdminStories();
   console.log(`getRecentArticles: Found ${adminStories.length} admin stories`);
   
-  const allArticles = [...adminStories, ...apiArticles, ...articles];
+  const allArticles = ensureValidDates([...adminStories, ...apiArticles, ...articles]);
   
-  // Make sure all articles have valid dates
-  const articlesWithDates = allArticles.map(article => {
-    if (!article.publishedAt) {
-      return {
-        ...article,
-        publishedAt: new Date().toISOString()
-      };
-    }
-    return article;
-  });
-  
-  return articlesWithDates
-    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+  return allArticles
+    .sort((a, b) => {
+      const dateA = new Date(a.publishedAt);
+      const dateB = new Date(b.publishedAt);
+      return dateB.getTime() - dateA.getTime();
+    })
     .slice(0, limit);
 };
 

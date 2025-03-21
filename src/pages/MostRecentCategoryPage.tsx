@@ -6,37 +6,74 @@ import { CategoryHeader } from '@/components/news/CategoryHeader';
 import { AdBanner } from '@/components/layout/AdBanner';
 import { getMostRecentArticles, Article } from '@/data/mockData';
 import { MetaTags } from '@/components/common/MetaTags';
+import { useToast } from '@/hooks/use-toast';
 
 const MostRecentCategoryPage = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     const loadArticles = async () => {
       setIsLoading(true);
       try {
-        // Make sure we get admin stories by forcing a fresh load
+        // Force a fresh load to ensure we get the latest admin stories
         const mostRecent = await getMostRecentArticles(30);
         console.log('Most Recent Articles loaded:', mostRecent.length);
+        
+        // Debug date information
+        if (mostRecent.length > 0) {
+          const datesSorted = mostRecent.map(article => ({
+            title: article.title,
+            date: new Date(article.publishedAt),
+            dateStr: article.publishedAt
+          }));
+          console.log('Articles dates (sorted by most recent first):', datesSorted);
+        }
         
         // Check if we have admin stories
         const adminStories = localStorage.getItem("adminStories");
         if (adminStories) {
-          console.log('Admin stories found in localStorage');
+          const parsedStories = JSON.parse(adminStories);
+          console.log('Admin stories found in localStorage:', parsedStories.length);
+          
+          // Debug admin stories dates
+          if (parsedStories.length > 0) {
+            const adminDatesSorted = parsedStories.map((story: Article) => ({
+              title: story.title,
+              date: new Date(story.publishedAt),
+              dateStr: story.publishedAt
+            }));
+            console.log('Admin stories dates:', adminDatesSorted);
+          }
         } else {
           console.log('No admin stories found in localStorage');
         }
         
         setArticles(mostRecent);
+        
+        // Show toast if articles were loaded
+        if (mostRecent.length > 0) {
+          toast({
+            title: "Articles Loaded",
+            description: `Loaded ${mostRecent.length} most recent articles`,
+            duration: 3000,
+          });
+        }
       } catch (error) {
         console.error('Error loading most recent articles:', error);
+        toast({
+          title: "Error Loading Articles",
+          description: "There was a problem loading the most recent articles",
+          variant: "destructive",
+        });
       } finally {
         setIsLoading(false);
       }
     };
 
     loadArticles();
-  }, []);
+  }, [toast]);
 
   return (
     <Layout>
