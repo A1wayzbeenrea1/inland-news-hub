@@ -15,7 +15,7 @@ const MostRecentCategoryPage = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    let rssRefreshInterval: number | null = null;
+    let rssRefreshInterval: ReturnType<typeof setInterval> | null = null;
     
     const loadArticles = async () => {
       setIsLoading(true);

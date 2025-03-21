@@ -94,6 +94,7 @@ const parseRssFeed = (xml: string, source: string): Article[] => {
         author: source,
         publishedAt,
         slug: generateSlug(title),
+        featured: false, // Set default value for featured
         source: source,
         tags: [category, source, "RSS", "Inland Empire"]
       };

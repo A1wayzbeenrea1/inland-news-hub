@@ -40,7 +40,7 @@ const Index = () => {
 
   // Load async data on component mount
   useEffect(() => {
-    let rssRefreshInterval: number | null = null;
+    let rssRefreshInterval: ReturnType<typeof setInterval> | null = null;
     
     const loadAsyncData = async () => {
       setIsLoading(true);

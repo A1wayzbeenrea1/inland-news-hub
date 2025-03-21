@@ -10,8 +10,8 @@ declare module "@/data/mockData" {
     author: string;
     publishedAt: string;
     slug: string;
-    featured: boolean;
-    tags: string[];
+    featured?: boolean;
+    tags?: string[];
     source?: string;
   }
 
@@ -23,4 +23,5 @@ declare module "@/data/mockData" {
   export function getFeaturedArticles(): Promise<Article[]>;
   export function getMostRecentArticles(limit?: number): Promise<Article[]>;
   export function getApiArticles(forceFresh?: boolean): Promise<Article[]>;
+  export function getRssArticles(forceFresh?: boolean): Promise<Article[]>;
 }
