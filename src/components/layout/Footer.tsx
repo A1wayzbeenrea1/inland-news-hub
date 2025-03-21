@@ -13,11 +13,8 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           <div className="flex flex-col items-start">
             <Link to="/" className="flex flex-col items-start mb-4">
-              <img 
-                src="/lovable-uploads/97104a5b-83e2-4269-b309-9c33310d3385.png" 
-                alt="INLAND EMPIRE TRUENEWS" 
-                className="h-16 mb-2"
-              />
+              <span className="text-2xl font-serif font-bold text-white">IE.TrueNews</span>
+              <span className="text-xl font-serif text-news-secondary">Your Trusted Source</span>
             </Link>
             <p className="text-sm text-gray-300 mb-4">
               Your trusted source for local news coverage in Yucaipa, Redlands, Rialto, Ontario and 
@@ -119,7 +116,7 @@ export const Footer = () => {
         {/* Bottom section with copyright */}
         <div className="pt-8 text-sm text-gray-400">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <p>© {currentYear} INLAND EMPIRE TRUENEWS. All rights reserved.</p>
+            <p>© {currentYear} IE.TrueNews. All rights reserved.</p>
             <div className="flex space-x-4 mt-4 md:mt-0">
               <Link to="/privacy" className="hover:text-white">Privacy Policy</Link>
               <Link to="/terms" className="hover:text-white">Terms of Use</Link>
