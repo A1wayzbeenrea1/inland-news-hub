@@ -1,6 +1,5 @@
-
 import { Link } from 'react-router-dom';
-import { Clock, User } from 'lucide-react';
+import { Clock, User, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
@@ -14,6 +13,9 @@ interface ArticleCardProps {
     author: string;
     publishedAt: string;
     slug: string;
+    source?: string;
+    sourceUrl?: string;
+    isExternal?: boolean;
   };
   variant?: 'default' | 'featured' | 'horizontal' | 'minimal';
   className?: string;
@@ -33,6 +35,16 @@ export const ArticleCard = ({ article, variant = 'default', className }: Article
     }).format(date);
   };
 
+  // Determine the appropriate link for the article
+  const articleLink = article.isExternal 
+    ? article.sourceUrl 
+    : `/article/${article.slug}`;
+
+  // Determine if link should open in a new tab
+  const linkProps = article.isExternal 
+    ? { target: "_blank", rel: "noopener noreferrer" } 
+    : {};
+
   if (variant === 'featured') {
     return (
       <div className={cn("group relative overflow-hidden rounded-lg", className)}>
@@ -47,9 +59,10 @@ export const ArticleCard = ({ article, variant = 'default', className }: Article
           <Badge className="self-start mb-3 bg-news-secondary hover:bg-news-primary border-none">
             {article.category}
           </Badge>
-          <Link to={`/article/${article.slug}`}>
+          <Link to={articleLink} {...linkProps}>
             <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-white mb-2 group-hover:text-news-secondary transition-colors">
               {article.title}
+              {article.isExternal && <ExternalLink size={18} className="inline-block ml-2" />}
             </h2>
           </Link>
           <p className="text-white/80 mb-4 line-clamp-2">{article.excerpt}</p>
@@ -78,9 +91,10 @@ export const ArticleCard = ({ article, variant = 'default', className }: Article
           <Badge className="mb-2 bg-news-secondary hover:bg-news-primary border-none">
             {article.category}
           </Badge>
-          <Link to={`/article/${article.slug}`}>
-            <h3 className="text-xl font-bold mb-2 group-hover:text-news-primary transition-colors">
+          <Link to={articleLink} {...linkProps}>
+            <h3 className="text-xl font-bold mb-2 group-hover:text-news-primary transition-colors flex items-center">
               {article.title}
+              {article.isExternal && <ExternalLink size={16} className="inline-block ml-2" />}
             </h3>
           </Link>
           <p className="text-gray-600 mb-3 line-clamp-2">{article.excerpt}</p>
@@ -98,9 +112,10 @@ export const ArticleCard = ({ article, variant = 'default', className }: Article
   if (variant === 'minimal') {
     return (
       <div className={cn("group border-b pb-3 mb-3", className)}>
-        <Link to={`/article/${article.slug}`}>
-          <h3 className="text-base font-medium group-hover:text-news-primary transition-colors line-clamp-2">
+        <Link to={articleLink} {...linkProps}>
+          <h3 className="text-base font-medium group-hover:text-news-primary transition-colors line-clamp-2 flex items-center">
             {article.title}
+            {article.isExternal && <ExternalLink size={14} className="inline-block ml-1 flex-shrink-0" />}
           </h3>
         </Link>
         <div className="flex items-center text-gray-500 text-xs mt-1">
@@ -125,9 +140,10 @@ export const ArticleCard = ({ article, variant = 'default', className }: Article
         <Badge className="self-start mb-2 bg-news-secondary hover:bg-news-primary border-none">
           {article.category}
         </Badge>
-        <Link to={`/article/${article.slug}`} className="flex-1">
-          <h3 className="text-lg font-bold mb-2 group-hover:text-news-primary transition-colors">
+        <Link to={articleLink} {...linkProps} className="flex-1">
+          <h3 className="text-lg font-bold mb-2 group-hover:text-news-primary transition-colors flex items-center">
             {article.title}
+            {article.isExternal && <ExternalLink size={16} className="inline-block ml-1 flex-shrink-0" />}
           </h3>
         </Link>
         <p className="text-gray-600 mb-4 line-clamp-3">{article.excerpt}</p>

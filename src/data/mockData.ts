@@ -1,4 +1,3 @@
-
 export interface Article {
   id: string;
   title: string;
@@ -10,7 +9,10 @@ export interface Article {
   publishedAt: string;
   slug: string;
   featured?: boolean;
-  tags?: string[]; // Add tags property to the interface
+  tags?: string[];
+  source?: string;
+  sourceUrl?: string;
+  isExternal?: boolean;
 }
 
 export const articles: Article[] = [
@@ -29,7 +31,10 @@ export const articles: Article[] = [
     author: 'Israel J. Cerreno Jr.',
     publishedAt: '2023-07-10T08:00:00Z',
     slug: 'state-order-aids-redlands-firefighters',
-    featured: true
+    featured: true,
+    source: 'Los Angeles Times',
+    sourceUrl: 'https://www.latimes.com/local/la-me-redlands-firefighters-wildfires-20230710-story.html',
+    isExternal: true
   },
   {
     id: '2',
@@ -45,7 +50,10 @@ export const articles: Article[] = [
     category: 'Public Safety',
     author: 'Michael Rodriguez',
     publishedAt: '2023-07-09T14:30:00Z',
-    slug: 'armed-suspect-threat-triggers-loma-linda-lockdown'
+    slug: 'armed-suspect-threat-triggers-loma-linda-lockdown',
+    source: 'Los Angeles Times',
+    sourceUrl: 'https://www.latimes.com/local/la-me-loma-linda-university-hospital-armed-suspect-20230709-story.html',
+    isExternal: true
   },
   {
     id: '3',
@@ -62,7 +70,10 @@ export const articles: Article[] = [
     author: 'Jennifer Chen',
     publishedAt: '2023-07-08T09:15:00Z',
     slug: 'yucaipa-high-school-robotics-team-advances-to-national-championship',
-    featured: true
+    featured: true,
+    source: 'Los Angeles Times',
+    sourceUrl: 'https://www.latimes.com/local/la-me-yucaipa-high-school-robotics-team-20230708-story.html',
+    isExternal: true
   },
   {
     id: '4',
@@ -78,7 +89,11 @@ export const articles: Article[] = [
     category: 'Business',
     author: 'David Washington',
     publishedAt: '2023-07-07T11:20:00Z',
-    slug: 'ontario-international-airport-reports-record-passenger-growth'
+    slug: 'ontario-international-airport-reports-record-passenger-growth',
+    featured: true,
+    source: 'Los Angeles Times',
+    sourceUrl: 'https://www.latimes.com/local/la-me-ontario-international-airport-20230707-story.html',
+    isExternal: true
   },
   {
     id: '5',
@@ -96,7 +111,10 @@ export const articles: Article[] = [
     author: 'Rachel Kim',
     publishedAt: '2023-07-06T16:45:00Z',
     slug: 'redlands-city-council-approves-downtown-development-plan',
-    featured: true
+    featured: true,
+    source: 'Los Angeles Times',
+    sourceUrl: 'https://www.latimes.com/local/la-me-redlands-city-council-20230706-story.html',
+    isExternal: true
   },
   {
     id: '6',
@@ -113,7 +131,11 @@ export const articles: Article[] = [
     category: 'Education',
     author: 'Thomas Johnson',
     publishedAt: '2023-07-05T13:10:00Z',
-    slug: 'rialto-school-district-announces-new-stem-program-partnership'
+    slug: 'rialto-school-district-announces-new-stem-program-partnership',
+    featured: true,
+    source: 'Los Angeles Times',
+    sourceUrl: 'https://www.latimes.com/local/la-me-rialto-school-district-20230705-story.html',
+    isExternal: true
   },
   {
     id: '7',
@@ -130,7 +152,11 @@ export const articles: Article[] = [
     category: 'Business',
     author: 'Sophia Martinez',
     publishedAt: '2023-07-04T10:00:00Z',
-    slug: 'local-vineyard-wins-prestigious-international-wine-competition'
+    slug: 'local-vineyard-wins-prestigious-international-wine-competition',
+    featured: true,
+    source: 'Los Angeles Times',
+    sourceUrl: 'https://www.latimes.com/local/la-me-local-vineyard-wins-20230704-story.html',
+    isExternal: true
   },
   {
     id: '8',
@@ -147,7 +173,11 @@ export const articles: Article[] = [
     category: 'Public Safety',
     author: 'Kyle Bennett',
     publishedAt: '2023-07-03T15:20:00Z',
-    slug: 'police-arrest-11-in-retail-theft-operation'
+    slug: 'police-arrest-11-in-retail-theft-operation',
+    featured: true,
+    source: 'Los Angeles Times',
+    sourceUrl: 'https://www.latimes.com/local/la-me-police-arrest-11-in-retail-theft-20230703-story.html',
+    isExternal: true
   },
   {
     id: '9',
@@ -165,7 +195,11 @@ export const articles: Article[] = [
     category: 'Public Safety',
     author: 'Emily Walker',
     publishedAt: '2023-07-02T09:40:00Z',
-    slug: 'redlands-fire-department-assist-with-la-fires'
+    slug: 'redlands-fire-department-assist-with-la-fires',
+    featured: true,
+    source: 'Los Angeles Times',
+    sourceUrl: 'https://www.latimes.com/local/la-me-redlands-fire-department-20230702-story.html',
+    isExternal: true
   },
   {
     id: '10',
@@ -183,7 +217,11 @@ export const articles: Article[] = [
     category: 'Politics',
     author: 'Marcus Johnson',
     publishedAt: '2023-07-01T12:15:00Z',
-    slug: 'new-affordable-housing-development-breaks-ground-in-ontario'
+    slug: 'new-affordable-housing-development-breaks-ground-in-ontario',
+    featured: true,
+    source: 'Los Angeles Times',
+    sourceUrl: 'https://www.latimes.com/local/la-me-new-affordable-housing-development-20230701-story.html',
+    isExternal: true
   }
 ];
 
@@ -195,8 +233,9 @@ export const getFeaturedArticles = () => {
   return articles.filter(article => article.featured);
 };
 
-export const getRecentArticles = (limit: number = 5) => {
-  return [...articles]
+export const getMostRecentArticles = (externalArticles: Article[] = [], limit: number = 10): Article[] => {
+  const allArticles = [...externalArticles, ...articles];
+  return allArticles
     .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
     .slice(0, limit);
 };
