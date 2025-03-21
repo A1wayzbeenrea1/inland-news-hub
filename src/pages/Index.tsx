@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { ArticleCard } from '@/components/news/ArticleCard';
@@ -26,11 +25,9 @@ const Index = () => {
       setIsLoading(true);
       
       try {
-        // Check for force refresh
         const forceRefresh = localStorage.getItem("forceRefresh");
-        const shouldForceRefresh = forceRefresh && (Date.now() - parseInt(forceRefresh)) < 10000; // Force if less than 10 seconds old
+        const shouldForceRefresh = forceRefresh && (Date.now() - parseInt(forceRefresh)) < 10000;
         
-        // Load data from all required endpoints
         const [featuredArticlesData, publicSafetyArticles, educationArticles, politicsArticles, businessArticles] = await Promise.all([
           getFeaturedArticles(),
           getArticlesByCategory('Public Safety'),
@@ -39,14 +36,12 @@ const Index = () => {
           getArticlesByCategory('Business')
         ]);
         
-        // Check if admin stories are loaded
         const adminStories = localStorage.getItem("adminStories");
         if (adminStories) {
           const parsedStories = JSON.parse(adminStories);
           console.log(`Index: Found ${parsedStories.length} admin stories in localStorage`);
         }
         
-        // Update state with loaded data
         setFeaturedArticles(featuredArticlesData);
         setCategoryArticles({
           'Public Safety': publicSafetyArticles,
@@ -55,11 +50,9 @@ const Index = () => {
           'Business': businessArticles,
         });
         
-        // Remove the force refresh flag after loading
         if (shouldForceRefresh) {
           localStorage.removeItem("forceRefresh");
         }
-        
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -67,18 +60,14 @@ const Index = () => {
       }
     };
 
-    // Initial load
     loadAsyncData();
     
-    // Set up RSS feed refreshing - reduced by 75% (from 15 minutes to 3.75 minutes)
     rssRefreshInterval = setupRssFeedRefresh(async () => {
       console.log("RSS feeds refreshed, reloading articles");
       await loadAsyncData();
-    }, 3.75); // Reduced from 15 to 3.75 minutes (75% reduction)
+    }, 26.25);
     
-    // Initialize Feedspot widgets
     const loadFeedspotWidgets = () => {
-      // Main news widget
       if (feedspotWidgetRef.current) {
         const script = document.createElement('script');
         script.type = 'text/javascript';
@@ -92,7 +81,6 @@ const Index = () => {
         feedspotWidgetRef.current.appendChild(script);
       }
       
-      // Redlands community widget
       if (redlandsFeedspotWidgetRef.current) {
         const iframe = document.createElement('iframe');
         iframe.className = 'widget_preview_iframe';
@@ -109,7 +97,6 @@ const Index = () => {
         redlandsFeedspotWidgetRef.current.appendChild(iframe);
       }
       
-      // Yucaipa community widget
       if (yucaipaFeedspotWidgetRef.current) {
         const iframe = document.createElement('iframe');
         iframe.className = 'widget_preview_iframe';
@@ -127,12 +114,10 @@ const Index = () => {
       }
     };
     
-    // Load widgets once data is loaded
     if (!isLoading) {
       loadFeedspotWidgets();
     }
     
-    // Cleanup function
     return () => {
       if (rssRefreshInterval !== null) {
         clearInterval(rssRefreshInterval);
@@ -168,21 +153,17 @@ const Index = () => {
               </section>
             )}
 
-            {/* General News Feedspot Widget Section */}
             <section className="mb-8">
               <SectionHeader title="News From Around The Web" />
               <div ref={feedspotWidgetRef} className="mt-4 rounded-lg shadow-md p-4 bg-white"></div>
             </section>
             
-            {/* Local Community Widgets */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              {/* Redlands Community Widget */}
               <section className="mb-8">
                 <SectionHeader title="Redlands Community News" />
                 <div ref={redlandsFeedspotWidgetRef} className="mt-4 rounded-lg shadow-md p-4 bg-white"></div>
               </section>
               
-              {/* Yucaipa Community Widget */}
               <section className="mb-8">
                 <SectionHeader title="Yucaipa Community News" />
                 <div ref={yucaipaFeedspotWidgetRef} className="mt-4 rounded-lg shadow-md p-4 bg-white"></div>
