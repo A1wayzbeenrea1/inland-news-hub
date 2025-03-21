@@ -30,34 +30,45 @@ const Article = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
     
-    const loadArticle = () => {
+    const loadArticle = async () => {
       setLoading(true);
       
+      if (!slug) {
+        navigate('/not-found');
+        return;
+      }
+      
+      console.log("Looking for article with slug:", slug);
+      
       // First try to get from regular articles
-      let foundArticle = getArticleBySlug(slug || '');
+      let foundArticle = getArticleBySlug(slug);
       
       // If not found, check localStorage for admin stories
-      if (!foundArticle && slug) {
-        const adminStories = localStorage.getItem("adminStories");
-        if (adminStories) {
-          try {
+      if (!foundArticle) {
+        try {
+          const adminStories = localStorage.getItem("adminStories");
+          if (adminStories) {
             const stories = JSON.parse(adminStories) as ArticleType[];
             foundArticle = stories.find(story => story.slug === slug);
             
             if (foundArticle) {
               console.log("Found admin story in localStorage:", foundArticle.title);
             }
-          } catch (error) {
-            console.error("Error parsing admin stories:", error);
           }
+        } catch (error) {
+          console.error("Error parsing admin stories:", error);
         }
       }
       
       if (foundArticle) {
         setArticle(foundArticle);
         // Get related articles based on the category
-        setRelatedArticles(getRelatedArticles(slug || '', 3));
-      } else if (slug) {
+        if (foundArticle.category) {
+          const related = getRelatedArticles(slug, 3);
+          setRelatedArticles(related);
+        }
+      } else {
+        console.error("Article not found with slug:", slug);
         navigate('/not-found');
       }
       
@@ -129,6 +140,9 @@ const Article = () => {
 
   // Generate a simplified text-only version for social media
   const socialMediaContent = `${article.title}\n\n${article.excerpt}\n\nRead more at: ${window.location.origin}/article/${slug}`;
+
+  // Generate a shareable full content version for social media
+  const fullShareableContent = `${article.title}\n\n${article.excerpt}\n\n${article.content.replace(/<[^>]*>?/gm, '')}\n\nOriginal article: ${window.location.origin}/article/${slug}`;
 
   return (
     <>
@@ -246,15 +260,26 @@ const Article = () => {
                             {copied ? <CheckCircle size={16} /> : <Copy size={16} />}
                           </Button>
                         </div>
-                        <textarea 
-                          className="w-full p-2 text-xs text-gray-700 border border-gray-300 rounded-md mt-2"
-                          rows={4}
-                          value={socialMediaContent}
-                          readOnly
-                          onClick={(e) => e.currentTarget.select()}
-                        />
-                        <div className="text-xs text-gray-500">
-                          *Copy the text above for social media posts or emails
+                        <div className="flex flex-col space-y-2 mt-2">
+                          <div className="text-sm font-semibold">Share Summary</div>
+                          <textarea 
+                            className="w-full p-2 text-xs text-gray-700 border border-gray-300 rounded-md"
+                            rows={4}
+                            value={socialMediaContent}
+                            readOnly
+                            onClick={(e) => e.currentTarget.select()}
+                          />
+                          <div className="text-sm font-semibold">Share Full Article</div>
+                          <textarea 
+                            className="w-full p-2 text-xs text-gray-700 border border-gray-300 rounded-md"
+                            rows={6}
+                            value={fullShareableContent}
+                            readOnly
+                            onClick={(e) => e.currentTarget.select()}
+                          />
+                          <div className="text-xs text-gray-500">
+                            *Copy the text above for sharing the complete article on social media or via email
+                          </div>
                         </div>
                       </div>
                     </PopoverContent>
@@ -303,14 +328,16 @@ const Article = () => {
 
               <AdBanner size="medium" className="mb-8" />
 
-              <div className="mb-8">
-                <h2 className="text-xl font-bold mb-4">Related Articles</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {relatedArticles.map((article) => (
-                    <ArticleCard key={article.id} article={article} />
-                  ))}
+              {relatedArticles.length > 0 && (
+                <div className="mb-8">
+                  <h2 className="text-xl font-bold mb-4">Related Articles</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {relatedArticles.map((article) => (
+                      <ArticleCard key={article.id} article={article} />
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="space-y-8">

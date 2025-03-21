@@ -17,6 +17,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import About from "./pages/About";
 import Staff from "./pages/Staff";
 import Accessibility from "./pages/Accessibility";
+import Article from "./pages/Article";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,9 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          
+          {/* Article Routes */}
+          <Route path="/article/:slug" element={<Article />} />
           
           {/* Category Routes */}
           <Route path="/category/:category" element={<CategoryPage />} />
