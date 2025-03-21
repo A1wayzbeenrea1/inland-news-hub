@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+
+import { useEffect, useState, useRef } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { ArticleCard } from '@/components/news/ArticleCard';
 import { CategoryHeader } from '@/components/news/CategoryHeader';
@@ -14,6 +15,7 @@ const Index = () => {
   const [categoryArticles, setCategoryArticles] = useState<{ [key: string]: Article[] }>({});
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const feedspotWidgetRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let rssRefreshInterval: ReturnType<typeof setInterval> | null = null;
@@ -72,13 +74,35 @@ const Index = () => {
       await loadAsyncData();
     }, 15); // Refresh every 15 minutes
     
+    // Initialize Feedspot widget
+    const loadFeedspotWidget = () => {
+      const script = document.createElement('script');
+      script.type = 'text/javascript';
+      script.id = 'iframecontent';
+      script.src = 'https://www.feedspot.com/widgets/Assets/js/wd-iframecontent.js';
+      script.setAttribute('data-wd-id', 'vcIef44b1196');
+      script.setAttribute('data-script', '');
+      script.setAttribute('data-host', '');
+      
+      // Clear the ref content before adding script to avoid duplications
+      if (feedspotWidgetRef.current) {
+        feedspotWidgetRef.current.innerHTML = '';
+        feedspotWidgetRef.current.appendChild(script);
+      }
+    };
+    
+    // Load widget once data is loaded
+    if (!isLoading) {
+      loadFeedspotWidget();
+    }
+    
     // Cleanup function
     return () => {
       if (rssRefreshInterval !== null) {
         clearInterval(rssRefreshInterval);
       }
     };
-  }, []);
+  }, [isLoading]);
 
   return (
     <Layout>
@@ -107,6 +131,12 @@ const Index = () => {
                 </div>
               </section>
             )}
+
+            {/* Feedspot Widget Section */}
+            <section className="mb-8">
+              <SectionHeader title="News From Around The Web" />
+              <div ref={feedspotWidgetRef} className="mt-4 rounded-lg shadow-md p-4 bg-white"></div>
+            </section>
 
             {Object.entries(categoryArticles).map(([category, articles]) => (
               articles.length > 0 && (
