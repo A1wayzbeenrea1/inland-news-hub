@@ -9,20 +9,24 @@ import { MetaTags } from '@/components/common/MetaTags';
 import { SectionHeader } from '@/components/common/SectionHeader';
 import { useToast } from '@/hooks/use-toast';
 import { setupRssFeedRefresh } from '@/services/rssFeedService';
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Index = () => {
   const [featuredArticles, setFeaturedArticles] = useState<Article[]>([]);
   const [categoryArticles, setCategoryArticles] = useState<{ [key: string]: Article[] }>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [loadingComplete, setLoadingComplete] = useState(false);
   const { toast } = useToast();
   const feedspotWidgetRef = useRef<HTMLDivElement>(null);
   const redlandsFeedspotWidgetRef = useRef<HTMLDivElement>(null);
   const yucaipaFeedspotWidgetRef = useRef<HTMLDivElement>(null);
+  const rssFeedIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isInitialLoad = useRef(true);
 
   useEffect(() => {
-    let rssRefreshInterval: ReturnType<typeof setInterval> | null = null;
-    
     const loadAsyncData = async () => {
+      if (!isInitialLoad.current && loadingComplete) return;
+      
       setIsLoading(true);
       
       try {
@@ -71,6 +75,10 @@ const Index = () => {
         if (shouldForceRefresh) {
           localStorage.removeItem("forceRefresh");
         }
+        
+        // Mark loading as complete after successful data fetch
+        setLoadingComplete(true);
+        isInitialLoad.current = false;
       } catch (error) {
         console.error('Error loading data:', error);
         toast({
@@ -85,12 +93,63 @@ const Index = () => {
 
     loadAsyncData();
     
-    rssRefreshInterval = setupRssFeedRefresh(async () => {
-      console.log("RSS feeds refreshed, reloading articles");
-      await loadAsyncData();
-    }, 26.25);
+    // Set up RSS feed refresh only once
+    if (!rssFeedIntervalRef.current) {
+      rssFeedIntervalRef.current = setupRssFeedRefresh(async () => {
+        console.log("RSS feeds refreshed, reloading articles");
+        
+        // Don't set loading to true on RSS refresh, just update the data quietly
+        try {
+          const results = await Promise.all([
+            getFeaturedArticles(),
+            getArticlesByCategory('Public Safety'),
+            getArticlesByCategory('Education'),
+            getArticlesByCategory('Politics'),
+            getArticlesByCategory('Business')
+          ]).catch(err => {
+            console.error("Error refreshing articles:", err);
+            return null; // Return null on error to skip updates
+          });
+          
+          // Only update state if we got valid results
+          if (results) {
+            const [
+              featuredArticlesData,
+              publicSafetyArticles,
+              educationArticles,
+              politicsArticles,
+              businessArticles
+            ] = results;
+            
+            setFeaturedArticles(featuredArticlesData || []);
+            setCategoryArticles({
+              'Public Safety': publicSafetyArticles || [],
+              'Education': educationArticles || [],
+              'Politics': politicsArticles || [],
+              'Business': businessArticles || [],
+            });
+          }
+        } catch (error) {
+          console.error("Error during RSS refresh:", error);
+          // Don't show toast on background refresh errors
+        }
+      }, 26.25);
+    }
     
+    return () => {
+      if (rssFeedIntervalRef.current !== null) {
+        clearInterval(rssFeedIntervalRef.current);
+        rssFeedIntervalRef.current = null;
+      }
+    };
+  }, [toast]);
+
+  // Separate effect for Feedspot widgets to prevent them from reloading on data changes
+  useEffect(() => {
     const loadFeedspotWidgets = () => {
+      // Only load widgets if we're not in the loading state
+      if (isLoading) return;
+      
       if (feedspotWidgetRef.current) {
         try {
           const script = document.createElement('script');
@@ -149,16 +208,11 @@ const Index = () => {
       }
     };
     
-    if (!isLoading) {
+    // Load widgets only after data is loaded
+    if (!isLoading && loadingComplete) {
       loadFeedspotWidgets();
     }
-    
-    return () => {
-      if (rssRefreshInterval !== null) {
-        clearInterval(rssRefreshInterval);
-      }
-    };
-  }, [isLoading, toast]);
+  }, [isLoading, loadingComplete]);
 
   return (
     <Layout>
@@ -190,18 +244,30 @@ const Index = () => {
 
             <section className="mb-8">
               <SectionHeader title="News From Around The Web" />
-              <div ref={feedspotWidgetRef} className="mt-4 rounded-lg shadow-md p-4 bg-white"></div>
+              <div ref={feedspotWidgetRef} className="mt-4 rounded-lg shadow-md p-4 bg-white min-h-[350px]">
+                {!loadingComplete && (
+                  <Skeleton className="w-full h-[350px]" />
+                )}
+              </div>
             </section>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <section className="mb-8">
                 <SectionHeader title="Redlands Community News" />
-                <div ref={redlandsFeedspotWidgetRef} className="mt-4 rounded-lg shadow-md p-4 bg-white"></div>
+                <div ref={redlandsFeedspotWidgetRef} className="mt-4 rounded-lg shadow-md p-4 bg-white min-h-[350px]">
+                  {!loadingComplete && (
+                    <Skeleton className="w-full h-[350px]" />
+                  )}
+                </div>
               </section>
               
               <section className="mb-8">
                 <SectionHeader title="Yucaipa Community News" />
-                <div ref={yucaipaFeedspotWidgetRef} className="mt-4 rounded-lg shadow-md p-4 bg-white"></div>
+                <div ref={yucaipaFeedspotWidgetRef} className="mt-4 rounded-lg shadow-md p-4 bg-white min-h-[350px]">
+                  {!loadingComplete && (
+                    <Skeleton className="w-full h-[350px]" />
+                  )}
+                </div>
               </section>
             </div>
 
