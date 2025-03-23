@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { getFeaturedArticles, getArticlesByCategory, Article } from '@/data/mockData';
 import { useToast } from '@/hooks/use-toast';
 import { setupRssFeedRefresh } from '@/services/rssFeedService';
+import { scheduleLocalNewsFetching } from '@/services/localNewsApiService';
 
 export const useNewsData = () => {
   const [featuredArticles, setFeaturedArticles] = useState<Article[]>([]);
@@ -11,6 +12,7 @@ export const useNewsData = () => {
   const [loadingComplete, setLoadingComplete] = useState(false);
   const { toast } = useToast();
   const rssFeedIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const localNewsIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isInitialLoad = useRef(true);
 
   useEffect(() => {
@@ -85,48 +87,14 @@ export const useNewsData = () => {
 
     loadAsyncData();
     
+    // Setup RSS feed refresh
     if (!rssFeedIntervalRef.current) {
-      rssFeedIntervalRef.current = setupRssFeedRefresh(async () => {
-        console.log("RSS feeds refreshed, reloading articles");
-        
-        try {
-          const results = await Promise.all([
-            getFeaturedArticles(),
-            getArticlesByCategory('Public Safety'),
-            getArticlesByCategory('Education'),
-            getArticlesByCategory('Politics'),
-            getArticlesByCategory('Business')
-          ]).catch(err => {
-            console.error("Error refreshing articles:", err);
-            return null;
-          });
-          
-          if (results) {
-            const [
-              featuredArticlesData,
-              publicSafetyArticles,
-              educationArticles,
-              politicsArticles,
-              businessArticles
-            ] = results;
-            
-            setFeaturedArticles(featuredArticlesData || []);
-            setCategoryArticles({
-              'Public Safety': publicSafetyArticles || [],
-              'Education': educationArticles || [],
-              'Politics': politicsArticles || [],
-              'Business': businessArticles || [],
-            });
-          }
-        } catch (error) {
-          console.error("Error during RSS refresh:", error);
-          toast({
-            title: "RSS Feed Error",
-            description: "Failed to refresh content. Will retry automatically.",
-            variant: "destructive"
-          });
-        }
-      }, 26.25);
+      rssFeedIntervalRef.current = setupRssFeedRefresh(handleNewArticles, 26.25);
+    }
+    
+    // Setup Local News API refresh
+    if (!localNewsIntervalRef.current) {
+      localNewsIntervalRef.current = scheduleLocalNewsFetching(handleNewArticles, 60); // Check every hour
     }
     
     return () => {
@@ -134,8 +102,54 @@ export const useNewsData = () => {
         clearInterval(rssFeedIntervalRef.current);
         rssFeedIntervalRef.current = null;
       }
+      
+      if (localNewsIntervalRef.current !== null) {
+        clearInterval(localNewsIntervalRef.current);
+        localNewsIntervalRef.current = null;
+      }
     };
   }, [toast]);
+  
+  // Handler for new articles from any source
+  const handleNewArticles = async (newArticles: Article[]) => {
+    console.log(`Received ${newArticles.length} new articles from external source`);
+    
+    try {
+      // Refresh all categories
+      const results = await Promise.all([
+        getFeaturedArticles(),
+        getArticlesByCategory('Public Safety'),
+        getArticlesByCategory('Education'),
+        getArticlesByCategory('Politics'),
+        getArticlesByCategory('Business')
+      ]).catch(err => {
+        console.error("Error refreshing articles:", err);
+        return null;
+      });
+      
+      if (results) {
+        const [
+          featuredArticlesData,
+          publicSafetyArticles,
+          educationArticles,
+          politicsArticles,
+          businessArticles
+        ] = results;
+        
+        setFeaturedArticles(featuredArticlesData || []);
+        setCategoryArticles({
+          'Public Safety': publicSafetyArticles || [],
+          'Education': educationArticles || [],
+          'Politics': politicsArticles || [],
+          'Business': businessArticles || [],
+        });
+        
+        console.log("Articles refreshed with latest content");
+      }
+    } catch (error) {
+      console.error("Error during article refresh:", error);
+    }
+  };
 
   return {
     featuredArticles,

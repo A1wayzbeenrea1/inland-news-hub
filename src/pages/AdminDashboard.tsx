@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -12,7 +11,9 @@ import {
   Link,
   ExternalLink,
   BarChart2,
-  Clock
+  Clock,
+  Globe,
+  Rss
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +21,7 @@ import { AdminStoryEditor } from "@/components/admin/AdminStoryEditor";
 import { AdminStoryList } from "@/components/admin/AdminStoryList";
 import { AdminUrlImporter } from "@/components/admin/AdminUrlImporter";
 import { AdminKtlaImporter } from "@/components/admin/AdminKtlaImporter";
+import { AdminLocalNewsSelector } from "@/components/admin/AdminLocalNewsSelector";
 import { Article } from "@/data/mockData";
 import { checkScheduledArticles } from "@/utils/adminUtils";
 import {
@@ -37,7 +39,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 
-type ActiveView = "list" | "editor" | "importer" | "ktla" | "analytics";
+type ActiveView = "list" | "editor" | "importer" | "ktla" | "analytics" | "localnews";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -229,6 +231,22 @@ const AdminDashboard = () => {
     setStories(updatedStories);
   };
 
+  const handleAddStoriesFromLocalNews = (newStories: Article[]) => {
+    // Make sure all stories have valid dates and are marked as admin stories
+    const storiesWithDates = newStories.map(story => ({
+      ...story,
+      publishedAt: story.publishedAt || new Date().toISOString(),
+      source: story.source || "Local News API" // Preserve original source
+    }));
+    
+    // Add multiple stories from Local News API
+    setStories(prevStories => [...prevStories, ...storiesWithDates]);
+    console.log(`Added ${newStories.length} new stories from Local News API`);
+    
+    // Go back to the list view
+    setActiveView("list");
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gray-50">
@@ -259,6 +277,12 @@ const AdminDashboard = () => {
                     <SidebarMenuButton onClick={handleCreateNew}>
                       <PlusCircle />
                       <span>New Story</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton onClick={() => setActiveView("localnews")}>
+                      <Globe />
+                      <span>Local News API</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
@@ -315,6 +339,19 @@ const AdminDashboard = () => {
                 </div>
               </SidebarGroupContent>
             </SidebarGroup>
+
+            {/* Add RSS Feeds section */}
+            <SidebarGroup>
+              <SidebarGroupLabel>External Sources</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <div className="px-4 py-2">
+                  <div className="flex items-center text-sm">
+                    <Rss className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <span>RSS Feeds: 3 active</span>
+                  </div>
+                </div>
+              </SidebarGroupContent>
+            </SidebarGroup>
           </SidebarContent>
           
           <SidebarFooter className="px-6 py-3 border-t">
@@ -342,12 +379,18 @@ const AdminDashboard = () => {
                       ? "Import from URL"
                       : activeView === "ktla"
                         ? "KTLA News Import"
-                        : "Analytics"}
+                        : activeView === "localnews"
+                          ? "Local News API"
+                          : "Analytics"}
               </h1>
             </div>
             <div>
               {activeView === "list" ? (
                 <div className="flex gap-2">
+                  <Button onClick={() => setActiveView("localnews")} variant="outline">
+                    <Globe className="mr-2 h-4 w-4" />
+                    Local News API
+                  </Button>
                   <Button onClick={() => setActiveView("ktla")} variant="outline">
                     <ExternalLink className="mr-2 h-4 w-4" />
                     KTLA News
@@ -384,8 +427,14 @@ const AdminDashboard = () => {
               />
             ) : activeView === "importer" ? (
               <AdminUrlImporter onAddStory={handleAddStoryFromUrl} />
-            ) : (
+            ) : activeView === "ktla" ? (
               <AdminKtlaImporter onAddStories={handleAddStoriesFromKtla} />
+            ) : activeView === "localnews" ? (
+              <AdminLocalNewsSelector onAddStories={handleAddStoriesFromLocalNews} />
+            ) : (
+              <div className="text-center py-12 bg-white rounded-lg shadow">
+                <p className="text-gray-500">Analytics view will be implemented in a future update.</p>
+              </div>
             )}
           </main>
         </div>
