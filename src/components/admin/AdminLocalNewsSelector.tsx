@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { RefreshCw, FilePlus, Filter, ExternalLink, Check, Loader2, Calendar, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -50,7 +49,6 @@ export function AdminLocalNewsSelector({ onAddStories }: AdminLocalNewsSelectorP
   const [autoImportInterval, setAutoImportInterval] = useState('60');
   const [lastFetched, setLastFetched] = useState<string | null>(null);
 
-  // Load auto-import settings from localStorage
   useEffect(() => {
     const savedAutoImport = localStorage.getItem('localNewsAutoImport');
     const savedInterval = localStorage.getItem('localNewsAutoImportInterval');
@@ -69,17 +67,14 @@ export function AdminLocalNewsSelector({ onAddStories }: AdminLocalNewsSelectorP
     }
   }, []);
 
-  // Fetch articles on component mount
   useEffect(() => {
     fetchArticles();
     
-    // Set up auto-import if enabled
     if (autoImportEnabled) {
       setupAutoImport();
     }
     
     return () => {
-      // Clean up interval on unmount
       if (window.localNewsAutoImportInterval) {
         clearInterval(window.localNewsAutoImportInterval);
         window.localNewsAutoImportInterval = null;
@@ -87,7 +82,6 @@ export function AdminLocalNewsSelector({ onAddStories }: AdminLocalNewsSelectorP
     };
   }, []);
 
-  // Setup auto-import interval
   const setupAutoImport = () => {
     if (window.localNewsAutoImportInterval) {
       clearInterval(window.localNewsAutoImportInterval);
@@ -102,7 +96,6 @@ export function AdminLocalNewsSelector({ onAddStories }: AdminLocalNewsSelectorP
     }, minutes * 60 * 1000);
   };
 
-  // Toggle auto-import
   const toggleAutoImport = (enabled: boolean) => {
     setAutoImportEnabled(enabled);
     localStorage.setItem('localNewsAutoImport', enabled.toString());
@@ -115,7 +108,6 @@ export function AdminLocalNewsSelector({ onAddStories }: AdminLocalNewsSelectorP
     }
   };
 
-  // Update auto-import interval
   const updateAutoImportInterval = (interval: string) => {
     setAutoImportInterval(interval);
     localStorage.setItem('localNewsAutoImportInterval', interval);
@@ -146,7 +138,6 @@ export function AdminLocalNewsSelector({ onAddStories }: AdminLocalNewsSelectorP
         });
       }
       
-      // Reset selection when articles change
       setSelectedArticles(new Set());
     } catch (error) {
       console.error("Error fetching local news articles:", error);
@@ -177,10 +168,8 @@ export function AdminLocalNewsSelector({ onAddStories }: AdminLocalNewsSelectorP
 
   const selectAll = () => {
     if (selectedArticles.size === filteredArticles.length) {
-      // Deselect all
       setSelectedArticles(new Set());
     } else {
-      // Select all filtered articles
       const ids = filteredArticles.map(article => article.id);
       setSelectedArticles(new Set(ids));
     }
@@ -196,7 +185,6 @@ export function AdminLocalNewsSelector({ onAddStories }: AdminLocalNewsSelectorP
       return;
     }
     
-    // Get selected articles
     const selectedStories = articles.filter(article => selectedArticles.has(article.id));
     
     onAddStories(selectedStories);
@@ -206,17 +194,14 @@ export function AdminLocalNewsSelector({ onAddStories }: AdminLocalNewsSelectorP
       description: `Added ${selectedStories.length} stories to your collection.`,
     });
     
-    // Reset selection
     setSelectedArticles(new Set());
   };
-  
-  // Open preview dialog
+
   const openPreview = (article: Article) => {
     setPreviewArticle(article);
     setShowPreview(true);
   };
-  
-  // Format date for better display
+
   const formatDate = (dateString: string): string => {
     try {
       const date = new Date(dateString);
@@ -231,18 +216,15 @@ export function AdminLocalNewsSelector({ onAddStories }: AdminLocalNewsSelectorP
       return dateString;
     }
   };
-  
-  // Get all unique sources for filter
+
   const getUniqueSources = (): string[] => {
     return Array.from(new Set(articles.map(a => a.source || 'Unknown')));
   };
-  
-  // Get all unique categories for filter
+
   const getUniqueCategories = (): string[] => {
     return Array.from(new Set(articles.map(a => a.category)));
   };
-  
-  // Filter articles based on search term, source filter, and category filter
+
   const filteredArticles = articles.filter(article => {
     const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          article.excerpt.toLowerCase().includes(searchTerm.toLowerCase());
@@ -460,7 +442,6 @@ export function AdminLocalNewsSelector({ onAddStories }: AdminLocalNewsSelectorP
         </div>
       </CardContent>
       
-      {/* Article preview dialog */}
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
@@ -500,13 +481,13 @@ export function AdminLocalNewsSelector({ onAddStories }: AdminLocalNewsSelectorP
                     initialContent={previewArticle.content} 
                   />
                   
-                  {previewArticle.url && (
+                  {previewArticle?.url && (
                     <div className="mt-4">
                       <h3 className="text-sm font-medium mb-2">Original Source</h3>
                       <Button 
                         variant="outline" 
                         className="w-full" 
-                        onClick={() => window.open(previewArticle.url, '_blank')}
+                        onClick={() => window.open(previewArticle?.url || '', '_blank')}
                       >
                         <ExternalLink className="mr-2 h-4 w-4" />
                         View Original
@@ -539,12 +520,10 @@ export function AdminLocalNewsSelector({ onAddStories }: AdminLocalNewsSelectorP
   );
 }
 
-// Add the missing type definition for the window object
 declare global {
   interface Window {
     localNewsAutoImportInterval: ReturnType<typeof setInterval> | null;
   }
 }
 
-// Initialize the property
 window.localNewsAutoImportInterval = null;
