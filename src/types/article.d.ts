@@ -14,6 +14,7 @@ declare module "@/data/mockData" {
     tags?: string[];
     source?: string;
     shareText?: string; // Added for social media sharing
+    url?: string; // Added for linking to original source
   }
 
   // Update function declarations to indicate they return Promises
