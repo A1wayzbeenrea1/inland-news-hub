@@ -7,20 +7,19 @@ import { BrowserRouter } from "react-router-dom";
 import { AppRoutes } from "./routes";
 import React from 'react';
 
+// Create a new QueryClient instance outside the component to prevent re-creation on renders
 const queryClient = new QueryClient();
 
 const App = () => (
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
+  <QueryClientProvider client={queryClient}>
+    <BrowserRouter>
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
+        <AppRoutes />
       </TooltipProvider>
-    </QueryClientProvider>
-  </React.StrictMode>
+    </BrowserRouter>
+  </QueryClientProvider>
 );
 
 export default App;
