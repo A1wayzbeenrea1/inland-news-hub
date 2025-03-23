@@ -10,7 +10,9 @@ import {
   Settings,
   LogOut,
   Link,
-  ExternalLink
+  ExternalLink,
+  BarChart2,
+  Clock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -19,6 +21,7 @@ import { AdminStoryList } from "@/components/admin/AdminStoryList";
 import { AdminUrlImporter } from "@/components/admin/AdminUrlImporter";
 import { AdminKtlaImporter } from "@/components/admin/AdminKtlaImporter";
 import { Article } from "@/data/mockData";
+import { checkScheduledArticles } from "@/utils/adminUtils";
 import {
   Sidebar,
   SidebarContent,
@@ -34,10 +37,12 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 
+type ActiveView = "list" | "editor" | "importer" | "ktla" | "analytics";
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [activeView, setActiveView] = useState<"list" | "editor" | "importer" | "ktla">("list");
+  const [activeView, setActiveView] = useState<ActiveView>("list");
   const [editingStory, setEditingStory] = useState<any | null>(null);
   const [stories, setStories] = useState<Article[]>([]);
 
@@ -81,6 +86,14 @@ const AdminDashboard = () => {
     };
     
     loadAdminStories();
+    
+    // Check for scheduled articles
+    checkScheduledArticles();
+    const scheduledInterval = setInterval(checkScheduledArticles, 60000); // Check every minute
+    
+    return () => {
+      clearInterval(scheduledInterval);
+    };
   }, [navigate, toast]);
 
   // Save stories to localStorage whenever they change
@@ -210,6 +223,11 @@ const AdminDashboard = () => {
     // Go back to the list view
     setActiveView("list");
   };
+  
+  // Handle story updates from the AdminStoryList component
+  const handleStoriesUpdate = (updatedStories: Article[]) => {
+    setStories(updatedStories);
+  };
 
   return (
     <SidebarProvider>
@@ -255,6 +273,12 @@ const AdminDashboard = () => {
                       <span>KTLA News</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton onClick={() => navigate("/admin/article-selection")}>
+                      <BarChart2 />
+                      <span>Analytics</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -276,6 +300,19 @@ const AdminDashboard = () => {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+            
+            {/* Display scheduled articles info */}
+            <SidebarGroup>
+              <SidebarGroupLabel>Scheduled Content</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <div className="px-4 py-2">
+                  <div className="flex items-center text-sm">
+                    <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <ScheduledArticlesCount />
+                  </div>
+                </div>
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
@@ -303,7 +340,9 @@ const AdminDashboard = () => {
                     ? "Story Editor" 
                     : activeView === "importer"
                       ? "Import from URL"
-                      : "KTLA News Import"}
+                      : activeView === "ktla"
+                        ? "KTLA News Import"
+                        : "Analytics"}
               </h1>
             </div>
             <div>
@@ -332,7 +371,11 @@ const AdminDashboard = () => {
           
           <main className="flex-1 p-6">
             {activeView === "list" ? (
-              <AdminStoryList onEdit={handleEditStory} stories={stories} />
+              <AdminStoryList 
+                onEdit={handleEditStory} 
+                stories={stories}
+                onStoriesUpdate={handleStoriesUpdate}
+              />
             ) : activeView === "editor" ? (
               <AdminStoryEditor 
                 story={editingStory} 
@@ -348,6 +391,32 @@ const AdminDashboard = () => {
         </div>
       </div>
     </SidebarProvider>
+  );
+};
+
+// Component to display the number of scheduled articles
+const ScheduledArticlesCount = () => {
+  const [count, setCount] = useState(0);
+  
+  useEffect(() => {
+    const getScheduledCount = () => {
+      try {
+        const scheduled = JSON.parse(localStorage.getItem("scheduledArticles") || "[]");
+        setCount(scheduled.length);
+      } catch (error) {
+        console.error("Error getting scheduled articles count:", error);
+        setCount(0);
+      }
+    };
+    
+    getScheduledCount();
+    const interval = setInterval(getScheduledCount, 60000); // Update every minute
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  return (
+    <span>{count} article{count !== 1 ? 's' : ''} scheduled</span>
   );
 };
 

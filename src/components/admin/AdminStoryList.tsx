@@ -26,20 +26,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useToast } from "@/hooks/use-toast";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Article } from "@/data/mockData";
+import { AdminBulkActions } from "./AdminBulkActions";
+import { cleanupOldArticles } from "@/utils/adminUtils";
 
 interface AdminStoryListProps {
   onEdit: (story: Article) => void;
   stories?: Article[];
+  onStoriesUpdate?: (updatedStories: Article[]) => void;
 }
 
-export function AdminStoryList({ onEdit, stories = [] }: AdminStoryListProps) {
+export function AdminStoryList({ onEdit, stories = [], onStoriesUpdate }: AdminStoryListProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortField, setSortField] = useState<"title" | "publishedAt">("publishedAt");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [showCleanupDialog, setShowCleanupDialog] = useState(false);
+  const [cleanupResult, setCleanupResult] = useState<{ archived: Article[], kept: Article[] } | null>(null);
+  const { toast } = useToast();
 
-  // If no stories provided, use mock data (keeping the original component behavior)
   const allStories = stories.length > 0 
     ? stories 
     : [
@@ -84,7 +93,6 @@ export function AdminStoryList({ onEdit, stories = [] }: AdminStoryListProps) {
         },
       ];
 
-  // Filter stories based on search term and category
   const filteredStories = allStories.filter(story => {
     const matchesSearch = 
       story.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -95,10 +103,8 @@ export function AdminStoryList({ onEdit, stories = [] }: AdminStoryListProps) {
     return matchesSearch && matchesCategory;
   });
 
-  // Get unique categories for the filter dropdown
   const categories = ["all", ...new Set(allStories.map(story => story.category))];
 
-  // Sort stories
   const sortedStories = [...filteredStories].sort((a, b) => {
     if (sortField === "title") {
       return sortDirection === "asc" 
@@ -125,13 +131,69 @@ export function AdminStoryList({ onEdit, stories = [] }: AdminStoryListProps) {
     return sortDirection === "asc" ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />;
   };
 
-  // Placeholder for actions that would be fully implemented in a real app
   const handleToggleFeatured = (id: string) => {
-    console.log("Toggle featured for story ID:", id);
+    const updatedStories = allStories.map(story => 
+      story.id === id ? { ...story, featured: !story.featured } : story
+    );
+    
+    if (onStoriesUpdate) {
+      onStoriesUpdate(updatedStories);
+    }
+    
+    toast({
+      title: "Story Updated",
+      description: `The story has been ${updatedStories.find(s => s.id === id)?.featured ? 'featured' : 'unfeatured'}.`
+    });
   };
 
   const handleDelete = (id: string) => {
-    console.log("Delete story ID:", id);
+    const updatedStories = allStories.filter(story => story.id !== id);
+    
+    if (onStoriesUpdate) {
+      onStoriesUpdate(updatedStories);
+    }
+    
+    toast({
+      title: "Story Deleted",
+      description: "The story has been permanently deleted."
+    });
+  };
+
+  const handleCheckboxChange = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedIds(prev => [...prev, id]);
+    } else {
+      setSelectedIds(prev => prev.filter(i => i !== id));
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(sortedStories.map(story => story.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleCleanupClick = () => {
+    setShowCleanupDialog(true);
+  };
+
+  const handleRunCleanup = () => {
+    const result = cleanupOldArticles(allStories);
+    setCleanupResult(result);
+    
+    if (onStoriesUpdate) {
+      onStoriesUpdate(result.kept);
+    }
+  };
+
+  const handleStoriesUpdate = (updatedStories: Article[]) => {
+    if (onStoriesUpdate) {
+      onStoriesUpdate(updatedStories);
+    }
+    
+    setSelectedIds([]);
   };
 
   return (
@@ -147,7 +209,7 @@ export function AdminStoryList({ onEdit, stories = [] }: AdminStoryListProps) {
           />
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger className="w-[180px]">
               <div className="flex">
@@ -163,13 +225,34 @@ export function AdminStoryList({ onEdit, stories = [] }: AdminStoryListProps) {
               ))}
             </SelectContent>
           </Select>
+          
+          <Button 
+            variant="outline" 
+            size="default" 
+            onClick={handleCleanupClick}
+            className="whitespace-nowrap"
+          >
+            Auto-Cleanup
+          </Button>
         </div>
       </div>
+      
+      <AdminBulkActions 
+        selectedIds={selectedIds}
+        articles={allStories}
+        onArticlesUpdate={handleStoriesUpdate}
+      />
       
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[40px]">
+                <Checkbox 
+                  checked={selectedIds.length === sortedStories.length && sortedStories.length > 0}
+                  onCheckedChange={handleSelectAll}
+                />
+              </TableHead>
               <TableHead className="w-[50px]">ID</TableHead>
               <TableHead className="cursor-pointer" onClick={() => toggleSort("title")}>
                 <div className="flex items-center">
@@ -191,13 +274,19 @@ export function AdminStoryList({ onEdit, stories = [] }: AdminStoryListProps) {
           <TableBody>
             {sortedStories.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   No stories found. Try changing your filters or create a new story.
                 </TableCell>
               </TableRow>
             ) : (
               sortedStories.map((story) => (
                 <TableRow key={story.id}>
+                  <TableCell>
+                    <Checkbox 
+                      checked={selectedIds.includes(story.id)}
+                      onCheckedChange={(checked) => handleCheckboxChange(story.id, checked === true)}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">{story.id.substring(0, 4)}</TableCell>
                   <TableCell>
                     <div>
@@ -259,6 +348,49 @@ export function AdminStoryList({ onEdit, stories = [] }: AdminStoryListProps) {
           </TableBody>
         </Table>
       </div>
+      
+      <AlertDialog open={showCleanupDialog} onOpenChange={setShowCleanupDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Auto-Cleanup Old Stories</AlertDialogTitle>
+            <AlertDialogDescription>
+              {!cleanupResult ? (
+                <>
+                  This will automatically archive stories that are:
+                  <ul className="list-disc pl-5 mt-2">
+                    <li>Older than 6 months</li>
+                    <li>Not marked as featured</li>
+                  </ul>
+                  <p className="mt-2">Do you want to proceed?</p>
+                </>
+              ) : (
+                <>
+                  <p className="font-medium">Cleanup Results:</p>
+                  <ul className="list-disc pl-5 mt-2">
+                    <li>{cleanupResult.archived.length} stories archived</li>
+                    <li>{cleanupResult.kept.length} stories kept</li>
+                  </ul>
+                  <p className="mt-2">Cleanup complete!</p>
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            {!cleanupResult ? (
+              <>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleRunCleanup}>
+                  Run Cleanup
+                </AlertDialogAction>
+              </>
+            ) : (
+              <AlertDialogAction onClick={() => setShowCleanupDialog(false)}>
+                Close
+              </AlertDialogAction>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

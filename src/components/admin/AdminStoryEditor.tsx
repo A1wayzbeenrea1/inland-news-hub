@@ -22,9 +22,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { Image, Save, X } from "lucide-react";
+import { Image, Save, X, Lightbulb, Calendar, Sparkles } from "lucide-react";
 import { Article } from "@/data/mockData";
+import { AdminSeoAnalyzer } from "./AdminSeoAnalyzer";
+import { AdminScheduler } from "./AdminScheduler";
+import { createSlugFromTitle } from "@/utils/adminUtils";
 
 const storySchema = z.object({
   title: z.string().min(5, {
@@ -59,6 +68,7 @@ export function AdminStoryEditor({ story, onCancel, onSave }: AdminStoryEditorPr
   const { toast } = useToast();
   const [imagePreview, setImagePreview] = useState<string | null>(story?.image || null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState("edit");
 
   // Initialize form with existing story data or defaults
   const form = useForm<StoryFormValues>({
@@ -73,14 +83,12 @@ export function AdminStoryEditor({ story, onCancel, onSave }: AdminStoryEditorPr
     },
   });
 
+  // Watch content for SEO analysis
+  const content = form.watch("content");
+
   // Generate slug from title
   const generateSlug = (title: string) => {
-    const slug = title
-      .toLowerCase()
-      .replace(/[^\w\s-]/g, "") // Remove special chars
-      .replace(/\s+/g, "-") // Replace spaces with hyphens
-      .replace(/-+/g, "-"); // Replace multiple hyphens with single hyphen
-    
+    const slug = createSlugFromTitle(title);
     form.setValue("slug", slug);
   };
 
@@ -95,6 +103,15 @@ export function AdminStoryEditor({ story, onCancel, onSave }: AdminStoryEditorPr
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  // Apply AI-suggested improvements
+  const handleApplySuggestion = (newContent: string) => {
+    form.setValue("content", newContent);
+    toast({
+      title: "Content Updated",
+      description: "AI suggestions applied to your content.",
+    });
   };
 
   // Handle form submission
@@ -134,210 +151,304 @@ export function AdminStoryEditor({ story, onCancel, onSave }: AdminStoryEditorPr
     }, 1000);
   };
 
+  // Auto-generate excerpt from content if not provided
+  const generateExcerpt = () => {
+    const contentValue = form.getValues("content");
+    if (contentValue && contentValue.length > 20) {
+      const excerpt = contentValue.substring(0, 150).replace(/\s+/g, ' ').trim() + "...";
+      form.setValue("excerpt", excerpt);
+      toast({
+        title: "Excerpt Generated",
+        description: "An excerpt has been automatically generated from your content.",
+      });
+    } else {
+      toast({
+        title: "Not enough content",
+        description: "Please add more content before generating an excerpt.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <Card>
       <CardContent className="p-6">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Title</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Story title" 
-                          {...field} 
-                          onChange={(e) => {
-                            field.onChange(e);
-                            if (!story) {
-                              generateSlug(e.target.value);
-                            }
-                          }}
+        <Tabs defaultValue="edit" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid grid-cols-3 mb-4">
+            <TabsTrigger value="edit">
+              <Save className="mr-2 h-4 w-4" />
+              Edit Story
+            </TabsTrigger>
+            <TabsTrigger value="seo">
+              <Lightbulb className="mr-2 h-4 w-4" />
+              SEO Analysis
+            </TabsTrigger>
+            <TabsTrigger value="schedule">
+              <Calendar className="mr-2 h-4 w-4" />
+              Schedule
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="edit">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-6">
+                    <FormField
+                      control={form.control}
+                      name="title"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Title</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="Story title" 
+                              {...field} 
+                              onChange={(e) => {
+                                field.onChange(e);
+                                if (!story) {
+                                  generateSlug(e.target.value);
+                                }
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="slug"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Slug</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="url-friendly-slug" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="category"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Category</FormLabel>
+                          <Select 
+                            onValueChange={field.onChange} 
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a category" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Public Safety">Public Safety</SelectItem>
+                              <SelectItem value="Politics">Politics</SelectItem>
+                              <SelectItem value="Business">Business</SelectItem>
+                              <SelectItem value="Education">Education</SelectItem>
+                              <SelectItem value="Health">Health</SelectItem>
+                              <SelectItem value="Environment">Environment</SelectItem>
+                              <SelectItem value="Community">Community</SelectItem>
+                              <SelectItem value="Sports">Sports</SelectItem>
+                              <SelectItem value="Entertainment">Entertainment</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="excerpt"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex justify-between">
+                            <span>Excerpt</span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={generateExcerpt}
+                              className="h-7 px-2 text-xs"
+                            >
+                              <Sparkles className="mr-1 h-3 w-3" />
+                              Auto-Generate
+                            </Button>
+                          </FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Brief summary of the story" 
+                              rows={3}
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="space-y-2">
+                      <FormLabel>Featured Image</FormLabel>
+                      <div className="flex items-center space-x-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => document.getElementById("image-upload")?.click()}
+                        >
+                          <Image className="mr-2 h-4 w-4" />
+                          Upload Image
+                        </Button>
+                        <input
+                          id="image-upload"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleImageUpload}
                         />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="slug"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Slug</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="url-friendly-slug" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a category" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Public Safety">Public Safety</SelectItem>
-                          <SelectItem value="Politics">Politics</SelectItem>
-                          <SelectItem value="Business">Business</SelectItem>
-                          <SelectItem value="Education">Education</SelectItem>
-                          <SelectItem value="Health">Health</SelectItem>
-                          <SelectItem value="Environment">Environment</SelectItem>
-                          <SelectItem value="Community">Community</SelectItem>
-                          <SelectItem value="Sports">Sports</SelectItem>
-                          <SelectItem value="Entertainment">Entertainment</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="excerpt"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Excerpt</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Brief summary of the story" 
-                          rows={3}
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="space-y-2">
-                  <FormLabel>Featured Image</FormLabel>
-                  <div className="flex items-center space-x-4">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => document.getElementById("image-upload")?.click()}
-                    >
-                      <Image className="mr-2 h-4 w-4" />
-                      Upload Image
-                    </Button>
-                    <input
-                      id="image-upload"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleImageUpload}
+                      </div>
+                      {imagePreview && (
+                        <div className="mt-4 relative w-full aspect-video rounded-md overflow-hidden border border-gray-200">
+                          <img 
+                            src={imagePreview} 
+                            alt="Preview" 
+                            className="w-full h-full object-cover"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-2 right-2"
+                            onClick={() => setImagePreview(null)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-6">
+                    <FormField
+                      control={form.control}
+                      name="content"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Content</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Write your story content here..." 
+                              className="h-[400px]"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="featured"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              className="h-4 w-4"
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>Featured Story</FormLabel>
+                            <p className="text-sm text-muted-foreground">
+                              This story will be highlighted on the homepage.
+                            </p>
+                          </div>
+                        </FormItem>
+                      )}
                     />
                   </div>
-                  {imagePreview && (
-                    <div className="mt-4 relative w-full aspect-video rounded-md overflow-hidden border border-gray-200">
-                      <img 
-                        src={imagePreview} 
-                        alt="Preview" 
-                        className="w-full h-full object-cover"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-2 right-2"
-                        onClick={() => setImagePreview(null)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
                 </div>
-              </div>
-              
-              <div className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="content"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Content</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Write your story content here..." 
-                          className="h-[400px]"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
                 
-                <FormField
-                  control={form.control}
-                  name="featured"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
-                      <FormControl>
-                        <input
-                          type="checkbox"
-                          checked={field.value}
-                          onChange={field.onChange}
-                          className="h-4 w-4"
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>Featured Story</FormLabel>
-                        <p className="text-sm text-muted-foreground">
-                          This story will be highlighted on the homepage.
-                        </p>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
+                <div className="flex justify-end space-x-4">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={onCancel}
+                    disabled={isSubmitting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Saving..." : (
+                      <>
+                        <Save className="mr-2 h-4 w-4" />
+                        {story ? "Update Story" : "Publish Story"}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </TabsContent>
+          
+          <TabsContent value="seo">
+            <AdminSeoAnalyzer 
+              initialContent={content} 
+              onSuggestionApply={handleApplySuggestion}
+            />
             
-            <div className="flex justify-end space-x-4">
+            <div className="flex justify-end mt-6">
               <Button 
-                type="button" 
-                variant="outline" 
-                onClick={onCancel}
-                disabled={isSubmitting}
+                onClick={() => setActiveTab("edit")}
+                variant="outline"
               >
-                Cancel
-              </Button>
-              <Button 
-                type="submit"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Saving..." : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    {story ? "Update Story" : "Publish Story"}
-                  </>
-                )}
+                Back to Editor
               </Button>
             </div>
-          </form>
-        </Form>
+          </TabsContent>
+          
+          <TabsContent value="schedule">
+            {story ? (
+              <AdminScheduler 
+                article={{
+                  ...story,
+                  title: form.getValues("title"),
+                  content: form.getValues("content"),
+                  excerpt: form.getValues("excerpt"),
+                  slug: form.getValues("slug"),
+                  category: form.getValues("category"),
+                  featured: form.getValues("featured"),
+                  image: imagePreview || story.image,
+                }}
+                onScheduled={onCancel}
+              />
+            ) : (
+              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+                <p>Please save your story first before scheduling it for publication.</p>
+                <Button 
+                  className="mt-4"
+                  onClick={() => setActiveTab("edit")}
+                >
+                  Back to Editor
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
