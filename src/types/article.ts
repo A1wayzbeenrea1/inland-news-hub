@@ -12,6 +12,6 @@ export interface Article {
   featured?: boolean;
   tags?: string[];
   source?: string;
-  shareText?: string; // Added for social media sharing
-  url?: string; // Added for linking to original source
+  shareText?: string; // For social media sharing
+  url?: string; // For linking to original source
 }
