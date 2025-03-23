@@ -1,34 +1,47 @@
 
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Home } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
 interface State {
   hasError: boolean;
   error: Error | null;
+  errorInfo: ErrorInfo | null;
 }
 
 class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { 
+      hasError: false, 
+      error: null, 
+      errorInfo: null 
+    };
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+    return { hasError: true, error, errorInfo: null };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     console.error("Error caught by ErrorBoundary:", error, errorInfo);
+    this.setState({ errorInfo });
+    
+    // Call the parent's onError handler if provided
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo);
+    }
   }
 
   handleReset = (): void => {
-    this.setState({ hasError: false, error: null });
+    this.setState({ hasError: false, error: null, errorInfo: null });
   };
 
   render(): ReactNode {
@@ -43,13 +56,24 @@ class ErrorBoundary extends Component<Props, State> {
           <pre className="bg-gray-100 p-4 rounded text-sm text-gray-800 mb-6 max-w-full overflow-x-auto">
             {this.state.error?.message}
           </pre>
-          <Button 
-            onClick={this.handleReset}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw size={16} />
-            Try Again
-          </Button>
+          <div className="flex gap-4">
+            <Button 
+              onClick={this.handleReset}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw size={16} />
+              Try Again
+            </Button>
+            <Link to="/">
+              <Button 
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <Home size={16} />
+                Go Home
+              </Button>
+            </Link>
+          </div>
         </div>
       );
     }

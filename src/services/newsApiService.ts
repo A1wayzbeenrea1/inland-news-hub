@@ -1,5 +1,6 @@
 
 import { Article } from "@/data/mockData";
+import { toast } from "@/hooks/use-toast";
 
 // Using NewsAPI as our news provider
 const NEWS_API_KEY = "YOUR_NEWS_API_KEY"; // Replace with your actual NewsAPI key
@@ -73,6 +74,7 @@ export const fetchLatestNews = async (pageSize = 20): Promise<Article[]> => {
       );
       
       if (!response.ok) {
+        // Enhanced error handling with status code
         throw new Error(`News API Error: ${response.status}`);
       }
       
@@ -105,6 +107,13 @@ export const fetchLatestNews = async (pageSize = 20): Promise<Article[]> => {
       );
     } catch (error) {
       console.error("Error fetching from News API:", error);
+      
+      // Show a toast notification when API fails
+      toast({
+        title: "API Connection Error",
+        description: "Unable to fetch latest news. Using cached data instead.",
+        variant: "destructive",
+      });
       
       // If API fails, return user stories plus any mock data if needed
       if (userStories.length > 0) {
