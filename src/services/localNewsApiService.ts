@@ -1,4 +1,3 @@
-
 import { Article } from "@/data/mockData";
 import { generateSlug, determineCategoryFromContent } from '@/services/newsApiService';
 import { useToast } from "@/hooks/use-toast";
@@ -28,6 +27,30 @@ const LOCAL_NEWS_APIS = [
     url: "https://www.fontanaheraldnews.com/api/most-recent/all",
     enabled: true,
     parser: "custom"
+  },
+  {
+    name: "Inland News TV",
+    url: "https://inlandnews.tv/wp-json/wp/v2/posts?per_page=10",
+    enabled: true,
+    parser: "wordpress"
+  },
+  {
+    name: "Inland Valley News",
+    url: "https://inlandvalleynews.com/wp-json/wp/v2/posts?per_page=10",
+    enabled: true,
+    parser: "wordpress"
+  },
+  {
+    name: "San Bernardino County News",
+    url: "https://www.sbsun.com/location/california/san-bernardino-county/inland-empire-san-bernardino-county/wp-json/wp/v2/posts?per_page=10",
+    enabled: true,
+    parser: "wordpress"
+  },
+  {
+    name: "Daily Bulletin",
+    url: "https://www.dailybulletin.com/wp-json/wp/v2/posts?per_page=10",
+    enabled: true,
+    parser: "wordpress"
   }
 ];
 

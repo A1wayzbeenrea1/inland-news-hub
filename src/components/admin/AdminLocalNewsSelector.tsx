@@ -481,13 +481,13 @@ export function AdminLocalNewsSelector({ onAddStories }: AdminLocalNewsSelectorP
                     initialContent={previewArticle.content} 
                   />
                   
-                  {previewArticle?.url && (
+                  {previewArticle.url && (
                     <div className="mt-4">
                       <h3 className="text-sm font-medium mb-2">Original Source</h3>
                       <Button 
                         variant="outline" 
                         className="w-full" 
-                        onClick={() => window.open(previewArticle?.url || '', '_blank')}
+                        onClick={() => window.open(previewArticle.url || '', '_blank')}
                       >
                         <ExternalLink className="mr-2 h-4 w-4" />
                         View Original
