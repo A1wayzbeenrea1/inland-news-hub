@@ -1,3 +1,4 @@
+[![Netlify Status](https://api.netlify.com/api/v1/badges/6a4837d7-5bcc-4484-81bf-8f68ff849bae/deploy-status)](https://app.netlify.com/sites/ietruenews/deploys)
 # Welcome to your Lovable project
 
 ## Project info
