@@ -6,21 +6,27 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
 
-      - uses: actions/setup-node@v3
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
           node-version: '18'
+          cache: 'npm'  # Enable caching for npm dependencies
 
-      - run: npm install
+      - name: Install Dependencies
+        run: npm install
 
-      - run: npm run build
+      - name: Build Project
+        run: npm run build
 
-      - name: Copy index.html to dist
+      - name: Copy index.html to 404.html
         run: cp dist/index.html dist/404.html
 
-      - name: Debug build output
+      - name: Debug Build Output
         run: |
           echo "Listing contents of the root directory..."
           ls -la
@@ -34,3 +40,10 @@ jobs:
           publish_dir: ./dist
           cname: IEtruenews.online
           force_orphan: true
+
+    # Add a final step to handle errors
+    if: failure()
+    run: echo "An error occurred during the workflow execution."
+
+    env:
+      NODE_ENV: production  # Use environment variables if needed
